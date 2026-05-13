@@ -1,0 +1,7 @@
+services:
+  sandbox:
+    build:
+      context: .
+    volumes:
+      - .:/code
+    command: tail -f /dev/null
