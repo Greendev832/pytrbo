@@ -60,7 +60,7 @@ def extract_params_type2(tx_hash):
 
 # Example execution
 # target_tx = "0xc2a713951e7762cc4498c5caef8fef4f0edb0fb19af78eacdc7fda8926dd68da"
-target_tx = "0x58352e98fbdb37fe716525fd8c254680766b1d6c68c851a6892a10303a897479"
+target_tx = "0x6197a37eadef0d2836a93816ad3c68b957b074f9bcd74f515c46d6007e658a17"
 results = extract_params_type2(target_tx)
 
 print(f"Transaction Type: {results['type']}")

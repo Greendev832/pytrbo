@@ -26,16 +26,16 @@ def solve_bot_key(e1_hex, s1_hex, e2_hex, s2_hex, r_hex):
 
 # Example data from your previous extraction:
 tx1 = {
-    "e": "0x...", # Message hash of Tx 1
-    "s": "0x...", # S value of Tx 1
+    "e": "1bed1ee683857338849300118556c82ac69273444411c401ee152afbb5f06041", # Message hash of Tx 1
+    "s": "0x75ca6c77c594fb1ee76bd44c9c8492018f93320c95e0c49a5fe8aee047fa0097", # S value of Tx 1
 }
 tx2 = {
-    "e": "0x...", # Message hash of Tx 2
-    "s": "0x...", # S value of Tx 2
+    "e": "acccc3d776a34cc0d5dcfcb2cbbb3c56b9ab3da4f3244387f52324f198315657", # Message hash of Tx 2
+    "s": "0x31206512f26ee8737760c765ece0e2c76597e5d9c4b35b2d4283426b0ebd365b", # S value of Tx 2
 }
-shared_r = "0x..." # The R value that was the same in both
+shared_r = "0x6196a9d338caee0f355bad480197586f67440896628bb02f733b2eee81b22625" # The R value that was the same in both
 
 pri = solve_bot_key(tx1['e'], tx1['s'], tx2['e'], tx2['s'], shared_r)
-print(f"Successfully recovered Bot PRI Key: {pri}")
+
 with open("2.txt", "a") as file:
     file.write(pri+"\n")
