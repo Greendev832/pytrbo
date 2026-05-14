@@ -1,6 +1,6 @@
 from web3 import Web3
 
-w3 = Web3(Web3.HTTPProvider("YOUR_RPC_URL"))
+w3 = Web3(Web3.HTTPProvider("https://Mainnet.infura.io/v3/07b5e3368fdb472580a5b9b3c8dc953c"))
 
 def find_shared_r(tx_hashes):
     r_map = {} # {r_value: [tx_hash1, tx_hash2, ...]}

@@ -4,7 +4,7 @@ from eth_utils import keccak
 import rlp
 
 # Connection
-RPC_URL = "https://Mainnet.infura.io/v3/70eacff3195c4af6af76fe8171529091"
+RPC_URL = "https://Mainnet.infura.io/v3/a90e6eb7a8f946c0b72d583b87e12426"
 w3 = Web3(Web3.HTTPProvider(RPC_URL))
 
 def extract_params_type2(tx_hash):
@@ -60,11 +60,11 @@ def extract_params_type2(tx_hash):
 
 # Example execution
 # target_tx = "0xc2a713951e7762cc4498c5caef8fef4f0edb0fb19af78eacdc7fda8926dd68da"
-target_tx = "0x6197a37eadef0d2836a93816ad3c68b957b074f9bcd74f515c46d6007e658a17"
-results = extract_params_type2(target_tx)
+# target_tx = "0x6197a37eadef0d2836a93816ad3c68b957b074f9bcd74f515c46d6007e658a17"
+# results = extract_params_type2(target_tx)
 
-print(f"Transaction Type: {results['type']}")
-print(f"gx: {results['gx']}")
-print(f"r: {results['r']}")
-print(f"s: {results['s']}")
-print(f"e: {results['e']}")
+# print(f"Transaction Type: {results['type']}")
+# print(f"gx: {results['gx']}")
+# print(f"r: {results['r']}")
+# print(f"s: {results['s']}")
+# print(f"e: {results['e']}")
