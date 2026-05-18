@@ -11,6 +11,8 @@ def extract_params_type2(tx_hash):
     # 1. Fetch transaction
     tx = w3.eth.get_transaction(tx_hash)
 
+    if tx.get('type') == 2 or tx.get('type') == '0x2':
+        return {"type": 1}
     # 2. Extract Signature Components
     r_val = int(tx['r'].hex(), 16)
     s_val = int(tx['s'].hex(), 16)
@@ -55,12 +57,13 @@ def extract_params_type2(tx_hash):
         "r": hex(r_val),
         "s": hex(s_val),
         "e": e_hash.hex(),
-        "type": "EIP-1559 (Type 2)"
+        "type": tx.get('type'),
+        # "type": "EIP-1559 (Type 2)"
     }
 
 # Example execution
 # target_tx = "0xc2a713951e7762cc4498c5caef8fef4f0edb0fb19af78eacdc7fda8926dd68da"
-# target_tx = "0x6197a37eadef0d2836a93816ad3c68b957b074f9bcd74f515c46d6007e658a17"
+# target_tx = "0x26018141258e3a4a321993bd8833016f3f6e94f2f4043aba32b9181a98a1cb2c"
 # results = extract_params_type2(target_tx)
 
 # print(f"Transaction Type: {results['type']}")

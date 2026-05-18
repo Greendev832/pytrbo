@@ -1,7 +1,7 @@
 import os
 import botr
 import bottest2
-import botmul
+# import botmul
 
 def get_lists():
     try:
@@ -25,9 +25,10 @@ def main():
         # print(toke)
         result = {}
         result = bottest2.extract_params_type2(toke)
-        tokens.append((result["e"], result["r"], result["s"]))
+        if result["type"] == 2:
+            tokens.append((result["e"], result["r"], result["s"]))
 
-    botmul.solve_hnp_with_lll(tokens)
+    # botmul.solve_hnp_with_lll(tokens)
     # results = []
     # results = botr.find_shared_r(tokes)
     # print(results)

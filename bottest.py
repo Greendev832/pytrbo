@@ -80,7 +80,7 @@ def extract_params(tx_hash):
         return {"error": str(err), "v_standard": v_standard}
 
 # Example usage
-target_hash = "0xc2a713951e7762cc4498c5caef8fef4f0edb0fb19af78eacdc7fda8926dd68da"
+target_hash = "0xd8dc995105543861319ddac9b810f70cdcd2fe3e20d2481d7d2ff8fe44eac36e"
 params = extract_params(target_hash)
 
 if "error" in params:
