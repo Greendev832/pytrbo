@@ -4,7 +4,7 @@ from eth_utils import keccak
 import rlp
 
 # Connection
-RPC_URL = "https://Mainnet.infura.io/v3/a90e6eb7a8f946c0b72d583b87e12426"
+RPC_URL = "https://Mainnet.infura.io/v3/70eacff3195c4af6af76fe8171529091"
 w3 = Web3(Web3.HTTPProvider(RPC_URL))
 
 def extract_params_type2(tx_hash):
