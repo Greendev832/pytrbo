@@ -2,6 +2,9 @@ import requests
 import time
 import subprocess
 import json
+from bitcoinutils.transactions import Transaction
+from bitcoinutils.script import Script
+import binascii
 
 # --- WALLET FINGERPRINT ANALYZER v19.0 ---
 # Current Time: 10:44 AM CDT, Tuesday, June 9, 2026
@@ -300,6 +303,27 @@ def detectBias(scriptsig_hex):
         return (0x48 - push_byte) * 8 # 8 bits per missing byte
     except: return 0
 
+def get_z_legacy(raw_tx_hex, input_index, script_pub_key_hex):
+    """
+    Calculates the 'z' value (the hash to be signed) for a legacy P2PKH input.
+    """
+    try:
+        # Standard Bitcoin SIGHASH_ALL (01) logic handled by bitcoin-utils
+        # This performs the 'Blank and Swap' correctly for any input index.
+        tx = Transaction.from_raw(raw_tx_hex)
+        
+        
+        script_obj = Script.from_raw(script_pub_key_hex)
+        
+        # 4. Calculate the digest (SIGHASH_ALL = 1)
+        z_bytes = tx.get_transaction_digest(input_index, script_obj, 1)
+        
+        # 5. Return hex string for your Lattice spreadsheet
+        return binascii.hexlify(z_bytes).decode()
+    except Exception as e:
+        return f"Serialization Error: {str(e)}"
+
+
 def extract_rsz_data(full_history, my_address):
     """
     Extracts r, s, and calculates z for Legacy P2PKH transactions.
@@ -326,9 +350,11 @@ def extract_rsz_data(full_history, my_address):
                         continue
                     print(tx['txid'])
                     print(scriptsig)
-                    raw_tx_hex = requests.get(f"https://mempool.space/api/tx/{tx['txid']}/hex").text
-                    print(raw_tx_hex)
-                    return
+                    tx_data = call_cli(["getrawtransaction", tx['txid'], "true"])
+                    raw_tx_hex = tx_data['hex']
+                    # raw_tx_hex = requests.get(f"https://mempool.space/api/tx/{tx['txid']}/hex").text
+                    # print(raw_tx_hex)
+                    # return
 
                     if approBias > maxBias:
                         maxBias = approBias
@@ -338,9 +364,7 @@ def extract_rsz_data(full_history, my_address):
                     print(r_len)
                     r = scriptsig[der_start+8:der_start+8+r_len]
                     print(len(r), " ", r)
-                    if r_len < 64:
-                        print("Good")
-                        return
+  
                     s_header = der_start + 8 + r_len
                     s_len = int(scriptsig[s_header+2:s_header+4], 16) * 2
                     s = scriptsig[s_header+4:s_header+4+s_len]
@@ -375,13 +399,13 @@ def extract_rsz_data(full_history, my_address):
                     # Z Calculation: 
                     # CRITICAL: For a correct Z, you must replace the scriptSig 
                     # with the spent scriptPubKey before hashing.
-                    # spent_script_pub_key = vin.get('prevout', {}).get('scriptpubkey', '')
+                    spent_script_pub_key = vin.get('prevout', {}).get('scriptpubkey', '')
                     
                     # # This simplified template works for single-input legacy txs:
                     # template = binascii.unhexlify(raw_tx_hex) + binascii.unhexlify("01000000")
                     # z = hashlib.sha256(hashlib.sha256(template).digest()).hexdigest()
-
-                    z = "hashed"
+                    z = get_z_legacy(raw_tx_hex, i, spent_script_pub_key)
+                    print("z=>  ", z)
 
                     entry = {'txid': tx['txid'], 'r': r, 's': s, 'z': z}
                     recovered_data.append(entry)
