@@ -2,8 +2,10 @@ import requests
 import time
 import subprocess
 import json
+import ecdsa
 from bitcoinutils.transactions import Transaction
 from bitcoinutils.script import Script
+from bitcoinutils.setup import setup
 import binascii
 
 # --- WALLET FINGERPRINT ANALYZER v19.0 ---
@@ -308,6 +310,8 @@ def get_z_legacy(raw_tx_hex, input_index, script_pub_key_hex):
     Calculates the 'z' value (the hash to be signed) for a legacy P2PKH input.
     """
     try:
+        # 1. Initialize for Mainnet
+        setup('mainnet')
         # Standard Bitcoin SIGHASH_ALL (01) logic handled by bitcoin-utils
         # This performs the 'Blank and Swap' correctly for any input index.
         tx = Transaction.from_raw(raw_tx_hex)
@@ -322,6 +326,37 @@ def get_z_legacy(raw_tx_hex, input_index, script_pub_key_hex):
         return binascii.hexlify(z_bytes).decode()
     except Exception as e:
         return f"Serialization Error: {str(e)}"
+    
+def verify_sig_integrity(r_hex, s_hex, z_hex, pubkey_hex):
+    """
+    Ensures your 539 signatures are mathematically valid before running LLL.
+    If this returns True, your R, S, and Z are perfectly aligned with the Public Key.
+    """
+    try:
+        # 1. Convert inputs to integers
+        r_int = int(r_hex, 16)
+        s_int = int(s_hex, 16)
+        z_int = int(z_hex, 16)
+        
+        # 2. Reconstruct the Public Key object (SECP256k1)
+        # Handles both Compressed (33 bytes) and Uncompressed (65 bytes)
+        pubkey_bytes = binascii.unhexlify(pubkey_hex)
+        vk = ecdsa.VerifyingKey.from_string(pubkey_bytes, curve=ecdsa.SECP256k1)
+        
+        # 3. Verify the signature (r, s) against the message hash (z)
+        # NOTE: ecdsa library expects the signature in (r + s) byte format
+        sig_bytes = binascii.unhexlify(r_hex.zfill(64) + s_hex.zfill(64))
+        
+        # Verification (Will raise ecdsa.BadSignatureError if incorrect)
+        is_valid = vk.verify_digest(sig_bytes, binascii.unhexlify(z_hex))
+        
+        return is_valid
+
+    except ecdsa.BadSignatureError:
+        return False
+    except Exception as e:
+        return f"Audit Error: {str(e)}"
+
 
 
 def extract_rsz_data(full_history, my_address):
@@ -332,6 +367,7 @@ def extract_rsz_data(full_history, my_address):
     r_seen = {} # For instant duplicate R detection
     out_txs = set()
     maxBias = 0
+    totalCnt = 0
 
     for tx in full_history:
         # raw_tx_hex = requests.get(f"https://mempool.space/api/tx/{tx['txid']}/hex").text
@@ -345,6 +381,7 @@ def extract_rsz_data(full_history, my_address):
                 
                 # Precise DER Parsing
                 try:
+                    totalCnt += 1
                     approBias = (detectBias(scriptsig))
                     if approBias == 0:
                         continue
@@ -352,16 +389,12 @@ def extract_rsz_data(full_history, my_address):
                     print(scriptsig)
                     tx_data = call_cli(["getrawtransaction", tx['txid'], "true"])
                     raw_tx_hex = tx_data['hex']
-                    # raw_tx_hex = requests.get(f"https://mempool.space/api/tx/{tx['txid']}/hex").text
-                    # print(raw_tx_hex)
-                    # return
 
                     if approBias > maxBias:
                         maxBias = approBias
                     print(approBias)
                     der_start = scriptsig.find('30')
                     r_len = int(scriptsig[der_start+6:der_start+8], 16) * 2
-                    print(r_len)
                     r = scriptsig[der_start+8:der_start+8+r_len]
                     print(len(r), " ", r)
   
@@ -407,7 +440,7 @@ def extract_rsz_data(full_history, my_address):
                     z = get_z_legacy(raw_tx_hex, i, spent_script_pub_key)
                     print("z=>  ", z)
 
-                    entry = {'txid': tx['txid'], 'r': r, 's': s, 'z': z}
+                    entry = {'txid': tx['txid'], 'r': r, 's': s, 'z': z, 'pubkey': pubkey}
                     recovered_data.append(entry)
 
                     # Instant Duplicate Check
@@ -437,7 +470,7 @@ def extract_rsz_data(full_history, my_address):
                     print(f"Skip TX {tx['txid']}: Parsing error {e}")
 
     print(maxBias)
-    return recovered_data, r_seen
+    return recovered_data, r_seen, totalCnt
 
 if __name__ == "__main__":
     # Example:
@@ -446,8 +479,14 @@ if __name__ == "__main__":
     # report = detect_vulnerable_software(address)
     # print(report)
     allHistory = get_full_history(address)
-    result, r_du = extract_rsz_data(allHistory, address)
-    print(len(result))
+    result, r_du, totalCnt = extract_rsz_data(allHistory, address)
+    verfiedCnt = 0
+    for entity in result:
+        res = verify_sig_integrity(entity['r'], entity['s'], entity['z'], entity['pubkey'])
+        if res:
+            verfiedCnt += 1
+        # print(res)
+    print(len(result), "-", verfiedCnt, "-", totalCnt)
 
 
 # Finds any signature starting with the 71-byte push (47) or 70-byte push (46)
