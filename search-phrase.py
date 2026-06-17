@@ -2,8 +2,16 @@ import hashlib
 import base58
 import time
 import requests
+import subprocess
 import json
 import ecdsa # Required for Secp256k1 derivation
+from ecdsa import VerifyingKey, SECP256k1, SigningKey
+from bitcoinutils.transactions import Transaction
+from bitcoinutils.script import Script
+from bitcoinutils.setup import setup
+import binascii
+
+N = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141
 
 # --- AUDIT CONFIGURATION ---
 # Current Time: 02:56 AM CDT, Tuesday, June 9, 2026
@@ -24,8 +32,28 @@ AUDIT_PHRASES = [
 "decentralize everything", "non aggression principle", "who is john galt"
 ]
 
+RPC_USER = "ace"
+RPC_PASS = "browser"
 
 QUICKNODE_URL = "https://indulgent-fluent-fog.btc.quiknode.pro/57aa2423c013b6d13f1dc4d41d4f959e95962cf2"
+
+def call_cli(command):
+    """Executes bitcoin-cli with RPC credentials and parses the result."""
+    cmd = ["bitcoin-cli", f"-rpcuser={RPC_USER}", f"-rpcpassword={RPC_PASS}", *command]
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=600) # Long timeout for scanning
+        print(result)
+        if result.returncode == 0:
+            raw = result.stdout.strip()
+            start = raw.find('{')
+            end = raw.rfind('}') + 1
+            if start != -1 and end != 0:
+                return json.loads(raw[start:end])
+            return raw
+    except Exception as e:
+        print(str(e))
+        pass
+    return None
 
 def get_balance_quicknode(address):
     headers = {
@@ -173,20 +201,154 @@ def get_balance_multi_api(address):
             
     return 0.0
 
+# def verify_all_standards(private_key_int):
+#     """
+#     Exhaustive verification of ALL possible 2012-2013 address formats.
+#     Includes: Uncompressed, Compressed, and Hybrid sign configurations.
+#     """
+#     try:
+#         # 1. Standardize the integer to be within the SECP256k1 field
+#         pk_clean = int(private_key_int) % N
+#         # pk_clean = int(private_key_int)
+#         if pk_clean == 0: return False
+        
+#         # 2. CRITICAL: Pad the hex string to exactly 64 characters (32 bytes)
+#         # This prevents the "Length of string" error
+#         pk_hex = hex(pk_clean)[2:].zfill(64)
+#         pk_bytes = binascii.unhexlify(pk_hex)
+        
+#         # 3. Import as Signing Key
+#         from ecdsa import SigningKey
+#         sk = SigningKey.from_string(pk_bytes, curve=SECP256k1)
+#         vk = sk.get_verifying_key()
+        
+#         # 4. Generate the candidates based on 2012/2013 standards
+#         # Uncompressed (Legacy 2012): 0x04 + 64 bytes of X,Y
+#         uncompressed_pub = b'\x04' + vk.to_string() 
+#         # Compressed (Legacy 2013): 0x02/0x03 + 32 bytes of X
+#         compressed_pub = vk.to_string(encoding="compressed")
+        
+#         for pubkey in [uncompressed_pub, compressed_pub]:
+#             # SHA256 -> RIPEMD160
+#             sha = hashlib.sha256(pubkey).digest()
+#             h = hashlib.new('ripemd160', sha).digest()
+#             # Add Network Byte (Mainnet = 0x00)
+#             net = b'\x00' + h
+#             # Double SHA256 Checksum
+#             check = hashlib.sha256(hashlib.sha256(net).digest()).digest()[:4]
+#             # Base58
+#             addr = base58.b58encode(net + check).decode()
+#             res2012 = get_balance_multi_api(addr)
+#             print(addr)
+#             print(res2012)
+#     except Exception as e:
+#         print(str(e))
+#         # Silently skip candidates that fail to parse
+#         # return False
+#     # return False
+
+def verify_all_standards(private_key_int):
+    """
+    Exhaustive verification of 2012-2013 standards.
+    Outputs both the Address and the corresponding Private Key (WIF).
+    """
+    try:
+        # 1. Standardize and Pad
+        pk_clean = int(private_key_int) % N
+        if pk_clean == 0: return False
+        
+        pk_hex = hex(pk_clean)[2:].zfill(64)
+        pk_bytes = binascii.unhexlify(pk_hex)
+        
+        # 2. Derive Verifying Key
+        sk = SigningKey.from_string(pk_bytes, curve=SECP256k1)
+        vk = sk.get_verifying_key()
+        
+        # 3. Define Standards: (Label, PubKeyBytes, is_compressed)
+        standards = [
+            ("Legacy Uncompressed (2012)", b'\x04' + vk.to_string(), False),
+            ("Legacy Compressed (2013)", vk.to_string(encoding="compressed"), True)
+        ]
+        
+        for label, pubkey, is_compressed in standards:
+            # --- PART A: Generate Address ---
+            sha = hashlib.sha256(pubkey).digest()
+            h = hashlib.new('ripemd160', sha).digest()
+            net_addr = b'\x00' + h
+            check_addr = hashlib.sha256(hashlib.sha256(net_addr).digest()).digest()[:4]
+            addr = base58.b58encode(net_addr + check_addr).decode()
+            
+            # --- PART B: Generate WIF (Private Key) ---
+            # Prefix 0x80 for Mainnet
+            if is_compressed:
+                # Compressed WIF adds a 0x01 suffix to the private key bytes
+                raw_wif = b'\x80' + pk_bytes + b'\x01'
+            else:
+                raw_wif = b'\x80' + pk_bytes
+                
+            check_wif = hashlib.sha256(hashlib.sha256(raw_wif).digest()).digest()[:4]
+            wif = base58.b58encode(raw_wif + check_wif).decode()
+
+            # --- PART C: Output ---
+            print(f"--- {label} ---")
+            print(f"Address: {addr}")
+            print(f"WIF Key: {wif}")
+
+            tx_data = call_cli(["scantxoutset", 'start', f'[{{"desc":"addr({addr})"}}]'])
+            print(tx_data['total_amount'])
+
+            # Call your balance API
+            if tx_data['total_amount'] > 0.0:
+                balance = get_balance_multi_api(addr)
+                print(f"Balance: {balance}")
+                if balance > 0.0:
+                    return True
+            
+            print("-" * 30)
+
+    except Exception as e:
+        print(f"Error: {str(e)}")
+    return False
+
+
 if __name__ == "__main__":
     print(f"--- Brainwallet Audit Log: {time.strftime('%Y-%m-%d %H:%M:%S')} ---")
-    res2012 = get_balance_multi_api('1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa')
-    print(res2012)
+    # res2012 = get_balance_multi_api('1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa')
+    # print(res2012)
     
-    for phrase in AUDIT_PHRASES:
-        data = audit_phrase(phrase)
-        # print(data)
-        print(f"Phrase: {data['phrase']}")
-        # print(f"  > 2012 WIF: {data['wif_2012']}")
-        res2012 = get_balance_multi_api(data['addr_2012'])
-        print(f"Address: {data['addr_2012']}, {res2012}")
-        res2013 = get_balance_multi_api(data['addr_2013'])
+    # for phrase in AUDIT_PHRASES:
+    #     data = audit_phrase(phrase)
+    #     # print(data)
+    #     print(f"Phrase: {data['phrase']}")
+    #     # print(f"  > 2012 WIF: {data['wif_2012']}")
+    #     res2012 = get_balance_multi_api(data['addr_2012'])
+    #     print(f"Address: {data['addr_2012']}, {res2012}")
+    #     res2013 = get_balance_multi_api(data['addr_2013'])
 
-        # print(f"  > 2013 WIF: {data['wif_2013']}")
-        print(f"Address: {data['addr_2013']}, {res2013}")
-        time.sleep(0.5)
+    #     # print(f"  > 2013 WIF: {data['wif_2013']}")
+    #     print(f"Address: {data['addr_2013']}, {res2013}")
+    #     time.sleep(0.5)
+    address = '1BQEJpcMjuYWJV1jCEA8pajGexQ9WBBtSb'
+    tx_data = call_cli(["scantxoutset", 'start', f'[{{"desc":"addr({address})"}}]'])
+    print(tx_data)
+
+    key = 2 ** 248
+    # idx = 263 #Tab = 1
+    # while (True):
+    #    res = verify_all_standards(key+idx)
+    #    print(idx)
+    #    if res:
+    #        break
+    #    idx += 1
+
+    # idx = 0
+    # while (True):
+    #    res = verify_all_standards(key-idx)
+    #    print(idx)
+    #    if res:
+    #        break
+    #    idx += 1
+    #    time.sleep(1)
+
+    # key = N // 2
+    # verify_all_standards(key+456137891358)
