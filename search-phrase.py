@@ -294,15 +294,15 @@ def verify_all_standards(private_key_int):
             print(f"Address: {addr}")
             print(f"WIF Key: {wif}")
 
-            tx_data = call_cli(["scantxoutset", 'start', f'[{{"desc":"addr({addr})"}}]'])
-            print(tx_data['total_amount'])
+            # tx_data = call_cli(["scantxoutset", 'start', f'[{{"desc":"addr({addr})"}}]'])
+            # print(tx_data['total_amount'])
 
-            # Call your balance API
-            if tx_data['total_amount'] > 0.0:
-                balance = get_balance_multi_api(addr)
-                print(f"Balance: {balance}")
-                if balance > 0.0:
-                    return True
+            # # Call your balance API
+            # if tx_data['total_amount'] > 0.0:
+            #     balance = get_balance_multi_api(addr)
+            #     print(f"Balance: {balance}")
+            #     if balance > 0.0:
+            #         return True
             
             print("-" * 30)
 
@@ -313,6 +313,7 @@ def verify_all_standards(private_key_int):
 
 if __name__ == "__main__":
     print(f"--- Brainwallet Audit Log: {time.strftime('%Y-%m-%d %H:%M:%S')} ---")
+    verify_all_standards("83028330920203733122359012694059835179187558478082245005773143407281055445935")
     # res2012 = get_balance_multi_api('1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa')
     # print(res2012)
     
@@ -328,9 +329,9 @@ if __name__ == "__main__":
     #     # print(f"  > 2013 WIF: {data['wif_2013']}")
     #     print(f"Address: {data['addr_2013']}, {res2013}")
     #     time.sleep(0.5)
-    address = '1BQEJpcMjuYWJV1jCEA8pajGexQ9WBBtSb'
-    tx_data = call_cli(["scantxoutset", 'start', f'[{{"desc":"addr({address})"}}]'])
-    print(tx_data)
+    # address = '1BQEJpcMjuYWJV1jCEA8pajGexQ9WBBtSb'
+    # tx_data = call_cli(["scantxoutset", 'start', f'[{{"desc":"addr({address})"}}]'])
+    # print(tx_data)
 
     key = 2 ** 248
     # idx = 263 #Tab = 1
