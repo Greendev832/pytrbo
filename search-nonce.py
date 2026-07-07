@@ -114,8 +114,12 @@ def runs_test_bit_sequence(bits):
     
 
     if abs(pi - 0.5) >= 2 / math.sqrt(n):
+        print("No p value-", bits)
         return {
-            "p_value": 0.0,
+            "runs": None,
+            "expected": None,
+            "z_score": None,
+            "p_value": 1.0,
             "reason": "bit balance too biased for runs test"
         }
 
@@ -332,17 +336,29 @@ def summarize_heatmap(heatmap):
     summary = []
 
     for bit, values in heatmap.items():
-        zs = [abs(v["z"]) for v in values]
+
+        zs = []
+
+        for v in values:
+            z = v.get("z")
+
+            if isinstance(z, (int, float)):
+                zs.append(abs(z))
+
+        if len(zs) == 0:
+            continue
 
         summary.append({
             "bit": bit,
             "max_abs_z": max(zs),
             "mean_abs_z": sum(zs) / len(zs),
-            "windows_over_2": sum(z > 2 for z in zs),
-            "windows_over_3": sum(z > 3 for z in zs),
+            "windows_over_2": sum(z >= 2.0 for z in zs),
+            "windows_over_3": sum(z >= 3.0 for z in zs),
         })
 
-    return sorted(summary, key=lambda x: x["max_abs_z"], reverse=True)
+    return sorted(summary,
+                  key=lambda x: x["max_abs_z"],
+                  reverse=True)
 
 
 def ascii_heatmap(bit_windows):
@@ -377,6 +393,47 @@ def neighbor_heatmap_report(heatmap, target_bit=235, radius=3):
         })
 
     return report
+
+def normal_two_sided_p(z):
+    return math.erfc(abs(z) / math.sqrt(2))
+
+
+def bit_balance_fdr(rs, alpha=0.05):
+    results = []
+    raw = []
+
+    n = len(rs)
+
+    for bit in range(256):
+        ones = sum((r >> bit) & 1 for r in rs)
+        zeros = n - ones
+        ratio = ones / n
+
+        expected = n / 2
+        std = math.sqrt(n * 0.25)
+        z = (ones - expected) / std
+        p = normal_two_sided_p(z)
+
+        results.append({
+            "bit": bit,
+            "ones": ones,
+            "zeros": zeros,
+            "ratio": ratio,
+            "z_score": z,
+            "p_value": p,
+            "deviation": abs(ratio - 0.5),
+        })
+
+        raw.append((bit, p))
+
+    adjusted = benjamini_hochberg(raw)
+    adj_map = {bit: q for bit, p, q in adjusted}
+
+    for r in results:
+        r["adjusted_p"] = adj_map[r["bit"]]
+        r["significant"] = r["adjusted_p"] < alpha
+
+    return sorted(results, key=lambda x: x["adjusted_p"])
 
 
 def classify_bit_heatmap(row):
@@ -432,6 +489,11 @@ def analyze_signer(signer, group, monte_carlo=False):
 
     chi, buckets = chi_square_buckets(rs)
     bits = bit_frequency(rs)
+    balance_tests = bit_balance_fdr(rs)
+    significant_balance = [
+        b for b in balance_tests
+        if b["significant"]
+    ]
 
     runs = runs_tests_for_r_bits(rs)
 
@@ -452,7 +514,9 @@ def analyze_signer(signer, group, monte_carlo=False):
     significant_runs = [
         r
         for r in runs
-        if r["adjusted_p"] < 0.05
+        if r.get("adjusted_p", 1.0) < 0.05
+        and r.get("reason") is None
+        and r.get("z_score") is not None
     ]
     # if significant_runs:
     #     bit = significant_runs[0]["bit"]
@@ -550,6 +614,9 @@ def analyze_signer(signer, group, monte_carlo=False):
 
         "significant_runs": significant_runs,
 
+        "bit_balance_lowest_p": balance_tests[:10],
+        "significant_bit_balance": significant_balance,
+
         # "shuffle_test": shuffle_result,
         # "bit_balance": bit_balance(rs, bit),
         # "window_runs": window_runs(rs, bit)
@@ -602,6 +669,13 @@ def analyze_all(csv_file):
             x.get("vid", 0)
         )
     )
+    startID = 4251
+    # startID = 1059
+    endID = 978
+    # endID = 910#1058
+    # endID = 580
+    # rows = rows[startID:endID]
+    # rows = rows[startID:]
 
     df = pd.DataFrame(rows)
 
@@ -631,7 +705,8 @@ def get_words():
         content_string = ""
         # with open("test.txt", "r") as f:
         # with open("keq-total-1.txt", "r") as f:
-        with open("keq-total-1.txt", "r") as f:
+        # with open("9GP1-total-3.txt", "r") as f:
+        with open("./report/9GP1-total-3.txt", "r") as f:
             content_string = f.read()
         # print(content_string)
         wordsList = content_string.split("\n")
@@ -663,7 +738,9 @@ if __name__ == "__main__":
             "suspicion_score": r["suspicion_score"],
             "runs_tests_lowest_p": r["runs_tests_lowest_p"],
             "significant_runs": r["significant_runs"],
-            "serial_correlation": r["serial_correlation"]
+            "serial_correlation": r["serial_correlation"],
+            "bit_balance_lowest_p": r["bit_balance_lowest_p"],
+            "significant_bit_balance": r["significant_bit_balance"]
         })
         # print(r)
     print(summary)

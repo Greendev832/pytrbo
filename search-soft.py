@@ -15,6 +15,7 @@ import binascii
 import hashlib
 import base58
 import coincurve
+from collections import Counter
 from sage.all import Matrix, ZZ, vector, QQ, RealField, RR, log, EllipticCurve, GF, inverse_mod, Integer, power_mod
 from fpylll import IntegerMatrix, GSO, BKZ, LLL, FPLLL, Enumeration
 
@@ -278,6 +279,7 @@ def get_full_history(address):
     cmp_time = 1388534400  # 2014.1.1
     print(f"Starting deep history scan for {address}...")
     
+    relaxID = 0
     while True:
         # Construct the URL with paging if we have a last_txid
         if last_txid:
@@ -307,8 +309,12 @@ def get_full_history(address):
         # Stop once we reach the end of 2012
         # if last_date > cmp_time: # Jan 1, 2012
         #     break
-        
-        time.sleep(0.5) # Avoid rate limiting
+        relaxID += 1
+        if relaxID < 10:
+            time.sleep(1) # Avoid rate limiting
+        else:
+            relaxID = 0
+            time.sleep(10)
 
     return all_txs
 
@@ -475,8 +481,8 @@ def extract_rsz_data(full_history, my_address):
                     if to_entity not in totalList:
                         totalList.append(to_entity)
                     approBias = (detectBias(scriptsig))
-                    if approBias == 0:
-                        continue
+                    # if approBias == 0:
+                    #     continue
                     print(tx['txid'])
                     print(scriptsig)
                     tx_data = call_cli(["getrawtransaction", tx['txid'], "true"])
@@ -532,7 +538,9 @@ def extract_rsz_data(full_history, my_address):
                     z = get_z_legacy(raw_tx_hex, i, spent_script_pub_key)
                     print("z=>  ", z)
 
-                    entry = {'txid': tx['txid'], 'r': r, 's': s, 'z': z, 'pubkey': pubkey, 'prefix': f'0x{scriptsig[0:2]}'}
+                    entry = {'txid': tx['txid'], 'r': r, 's': s, 'z': z, 'pubkey': pubkey, 'prefix': f'0x{scriptsig[0:2]}', 'vid': i}
+                    block_height = tx.get('status', {}).get('block_height', 0)
+                    entry['block_height'] = block_height
                     if entry not in recovered_data:
                         recovered_data.append(entry)
                         # if maxBias > 1:
@@ -558,10 +566,10 @@ def extract_rsz_data(full_history, my_address):
                         r_seen[r] = []
                         r_seen[r].append(s)
                     # r_seen[r] = tx['txid']
-                    if tx['txid'] in out_txs:
-                        continue
-                    out_txs.add(tx['txid'])
-                    print(tx['txid'])
+                    # if tx['txid'] in out_txs:
+                    #     continue
+                    # out_txs.add(tx['txid'])
+                    # print(tx['txid'])
 
                 except Exception as e:
                     print(f"Skip TX {tx['txid']}: Parsing error {e}")
@@ -1622,8 +1630,8 @@ def get_words():
     wordsList = []
     if wordsList == []:
         content_string = ""
-        with open("test.txt", "r") as f:
-        # with open("123.txt", "r") as f:
+        # with open("test.txt", "r") as f:
+        with open("hkm-123456.txt", "r") as f:
         # with open("123456.txt", "r") as f:
             content_string = f.read()
         # print(content_string)
@@ -1668,10 +1676,13 @@ def run_v9_2_sprint(signatures, target_pubkey_hex):
     possible_shifts = [N // (2**i) for i in range(5, 13)]
 
     # SPEED OPTIMIZATION: Scan only the highest signal rows (0-5)
-    for row_idx in range(1, 6): 
+    for row_idx in range(0, 6): 
         print(row_idx)
         v_m = int(L[row_idx, m])
         v_m_plus_1 = int(L[row_idx, m+1])
+        print(v_m)
+        print(v_m_plus_1)
+        continue
         
         # Dual-Column Candidates for Balanced Lattices (0.414 slope)
         candidates = [
@@ -1720,34 +1731,121 @@ def run_v9_2_sprint(signatures, target_pubkey_hex):
     
     print("[*] Sprint complete. High-signal zone exhausted.")
     return None
-                    
-if __name__ == "__main__":
-    # Example:
-    # address= "1NibfhHfgA857dtG6pB25Y5hDcxpDo2J47"
-    # address = "1EpbMFnnpCi6QjQCJMhkKdJyatwDjeoYmA"
-    # address = "1FgiDfz7jmdjTUaJ9GsKbNbgsmu7T31Dvx"
-    # address = "1JfzVxMddF91a4oqhZYsSZ4tmpRXfWvKeY"
-    # address = "1A8mhLMd1meWZbLvbKCzpta5rC9tnV5v5Z"
-    # address = "1nn1Z3NAJzT2mc6rDL11K4AhhpKgrCftP"
-    # address = "1KaW2Fe3hjx3G5M21oiZJzThqfR5pkvp4X"
 
-    # address = "15ZV6KuHbkoX8BWWi61FP2ngry7Y7K6HJS"
 
-    address = "1BezrM7zLYP9R4MwUHdHt89Va8pdYvpv3Y"
 
-    # address = "16fXTTLZRft6eWb32zSihvGXSgZ6QmDQBB"
-    # report = detect_vulnerable_software(address)
-    # print(report)
-    
+def analyze_r_values(r_values):
+    cleaned = [r.lower().replace("0x", "").zfill(64) for r in r_values]
+    nums = [int(r, 16) for r in cleaned]
+
+    print("Total r values:", len(cleaned))
+    print("Duplicate r count:", len(cleaned) - len(set(cleaned)))
+
+    bit_lengths = [n.bit_length() for n in nums]
+    leading_bytes = [r[:2] for r in cleaned]
+    msb_set = sum(1 for r in cleaned if int(r[:2], 16) >= 0x80)
+    leading_zero_bytes = [len(r) - len(r.lstrip("0")) for r in cleaned]
+
+    print("\nBit length distribution:")
+    for k, v in sorted(Counter(bit_lengths).items()):
+        print(k, v)
+
+    print("\nLeading byte distribution:")
+    for k, v in sorted(Counter(leading_bytes).items()):
+        print(k, v)
+
+    print("\nMSB set count:")
+    print(msb_set, "/", len(cleaned))
+
+    print("\nLeading hex zero count:")
+    for k, v in sorted(Counter(leading_zero_bytes).items()):
+        print(k, v)
+
+    print("\nSmall-r candidates:")
+    for r in cleaned:
+        if int(r[:2], 16) < 0x10:
+            print(r)
+
+def check_der_signature(sig_hex):
+    sig = bytes.fromhex(sig_hex)
+
+    if len(sig) < 9:
+        return False, "Too short"
+
+    sighash = sig[-1]
+    der = sig[:-1]
+
+    if der[0] != 0x30:
+        return False, "Not DER sequence"
+
+    if der[1] != len(der) - 2:
+        return False, "Wrong total length"
+
+    if der[2] != 0x02:
+        return False, "Missing r integer marker"
+
+    r_len = der[3]
+    r_start = 4
+    r_end = r_start + r_len
+
+    if r_len == 0:
+        return False, "Zero-length r"
+
+    if r_end >= len(der):
+        return False, "r length out of range"
+
+    r = der[r_start:r_end]
+
+    if der[r_end] != 0x02:
+        return False, "Missing s integer marker"
+
+    s_len = der[r_end + 1]
+    s_start = r_end + 2
+    s_end = s_start + s_len
+
+    if s_len == 0:
+        return False, "Zero-length s"
+
+    if s_end != len(der):
+        return False, "Wrong s length"
+
+    s = der[s_start:s_end]
+
+    def check_int(x, name):
+        if x[0] & 0x80:
+            return False, f"{name} is negative"
+        if len(x) > 1 and x[0] == 0x00 and not (x[1] & 0x80):
+            return False, f"{name} has unnecessary leading zero"
+        return True, "ok"
+
+    ok, reason = check_int(r, "r")
+    if not ok:
+        return False, reason
+
+    ok, reason = check_int(s, "s")
+    if not ok:
+        return False, reason
+
+    return True, {
+        "sighash": hex(sighash),
+        "r_len": r_len,
+        "s_len": s_len,
+        "r": r.hex(),
+        "s": s.hex()
+    }
+
+def make_report(address):
     result = []
     totalCnt = 0
-    # allHistory = get_full_history(address)
-    # result, r_du, totalCnt = extract_rsz_data(allHistory, address)
+    allHistory = get_full_history(address)
+    result, r_du, totalCnt = extract_rsz_data(allHistory, address)
 
-    words = get_words()
-    for word in words:
-        result.append(json.loads(word))
+    # words = get_words()
+    # for word in words:
+    #     result.append(json.loads(word))
         
+    # result = result[:38]
+    pat = address[1:5]
 
     verfiedCnt = 0
     top45List = []
@@ -1765,6 +1863,22 @@ if __name__ == "__main__":
             bias = get_bias_bits(entity['r'])
             totalBias += bias
             verfiedCnt += 1
+
+            tx_data = call_cli(["getrawtransaction", entity['txid'], "true"])
+            tx_time = (tx_data['blocktime'])
+
+            tx_blockhash = (tx_data['blockhash'])
+            block_data = call_cli(["getblock", tx_blockhash])
+            tx_index = block_data["tx"].index(entity['txid'])
+            # print(tx_time)
+            
+            with open(f"./report/{pat}-total-1.txt", "a") as file:
+                final_res = entity
+                final_res['blocktime'] = tx_time
+                final_res['tx_index'] = tx_index
+                file.write(json.dumps(final_res)+'\n')
+                # file.write(json.dumps(entity)+'\n')
+
         # print(res)
     print(bigScnt)
     print(totalBias)
@@ -1780,6 +1894,188 @@ if __name__ == "__main__":
     pubkey_byte = bytes.fromhex(pubkey)
     print(pubkey_byte)
 
+    for entity in result:
+        with open(f"./report/{pat}-total-2.txt", "a") as file:
+            final_res = entity
+            file.write(json.dumps(final_res)+'\n')
+            # file.write(json.dumps(entity)+'\n')
+    result.sort(
+        key=lambda x: (
+            x["block_height"],
+            x["tx_index"],
+            x.get("vid", 0)
+        )
+    )
+    for entity in result:
+        with open(f"./report/{pat}-total-3.txt", "a") as file:
+            final_res = entity
+            file.write(json.dumps(final_res)+'\n')
+
+def get_addresses():
+    wordsList = []
+    if wordsList == []:
+        content_string = ""
+        # with open("test.txt", "r") as f:
+        with open("2013.txt", "r") as f:
+        # with open("123456.txt", "r") as f:
+            content_string = f.read()
+        # print(content_string)
+        wordsList = content_string.split("\n")
+        
+    return wordsList
+                   
+if __name__ == "__main__":
+    # addresses = get_addresses()
+    # id = 0
+    # for content in addresses:
+    #     if not content:
+    #         continue
+    #     if id < 10:
+    #         continue
+    #     else:
+    #         addr = content.split(",")[0]
+    #         print(addr)
+    #         make_report(addr)
+    #         time.sleep(200)
+    #     id+=1
+    
+    
+    # Example:
+    # address= "1NibfhHfgA857dtG6pB25Y5hDcxpDo2J47"
+    # address = "1EpbMFnnpCi6QjQCJMhkKdJyatwDjeoYmA"
+    # address = "1FgiDfz7jmdjTUaJ9GsKbNbgsmu7T31Dvx"
+    # address = "1JfzVxMddF91a4oqhZYsSZ4tmpRXfWvKeY"
+    # address = "1A8mhLMd1meWZbLvbKCzpta5rC9tnV5v5Z"
+    # address = "1nn1Z3NAJzT2mc6rDL11K4AhhpKgrCftP"
+    # address = "1KaW2Fe3hjx3G5M21oiZJzThqfR5pkvp4X"
+
+    # address = "15ZV6KuHbkoX8BWWi61FP2ngry7Y7K6HJS"
+
+    # address = "1BezrM7zLYP9R4MwUHdHt89Va8pdYvpv3Y" #best one
+    # address = "1BowP9AXuMTjiiR1u1AJjUwMNuRaZP9BSp" #best one
+    # address = "1B3HC7Gft6Fnh4EVsA2DrRdXrWZA1oHELR" #candidate
+
+    address = "1CTUU9ezF4FJ3iBWzzuhndFUKokJ39wupA"
+
+
+    # address = "1HKm9u2VcKP23AEUQRcPcjAyR4NSda97kC"
+
+    # address = "1AV4KGCsvtPZ9tG7hvwgb85wJyFd9xdpFv"
+    # address = "16mCkMt1Z4ZSaKZNitk2PcP1MyW19wHiQ8" #heavy
+    # address = "1FkFFs5QuFqqGgUovo6HN7SR2LSiUPK8Eh" #medium
+    # address = "1PTw9KreduwbaJrydHnXTYKTGMRM9cQygT" ///
+    # address = "19GP1D3BPe8K8uvbTaqxLzXPyBFj9GhHrL" #medium
+    # address = "1FoLjGcHFekHWcXxcja6C7SKNGNVc3rYZH"
+    # address = "1JWCPRUrtLWadbuMfe7iBSRV1WS6xkS2VZ" #medium
+    # address = "16mCkMt1Z4ZSaKZNitk2PcP1MyW19wHiQ8" ///
+    # address = "1Mf4SBdgeHWP6X7sJyR5T6GG3G9johrZF9"
+    # address = "1JHwt6ArhujJmgDKPtSmGkMmSAPyAhVptL"
+    # address = "1A4S96oNLQr9pp9iVRAhsyjEBEVp5hrFnu"
+    # address = "1DMe8xchq6ChFcuJRz9EodHWjmR6ckofqq"
+    # address = "13iTiSbLV87stuje9TVGVE2txyWyfmvjh8" #medium
+    # address = "1BVNys6B5v8yeWMZxT1RJWgrcuArikYgA1" #
+    # address = "1Hr6WhNgciytH3RwTy28q2tbm2JNBzuDm2" #medium
+    # address = "1CiXtqcniX6acNEM4SK89sBrKYskeoWmat"
+    # address = "15VyBbVPPrvPy8KziccchLkJRF4eF2Pmid" #
+    # address = "1B7zVbm1CSsxcJj49QAppaAG9zKnKfA46y"
+    # address = "14opZdXZSQWFTvQabCJyVADahZSxhbWsTR" #
+    # address = "13FfGqvz8tqqjYreg9czoNLQf32H34NGJN"
+    # address = "13YVUnJLHHDVPuzpoziQFS7JgtCNDJy5CM"
+    # address = "15RsDbyJkZHCqNGftni1Umau5DmfDbExEW" #
+    # address = "181KoGwpDNNEVvWyEvHpM2SLWQDXwLvofS" #good
+    # address = "15ubYU8d11bW4fZnh5A2JG2vD83eavgxNk"
+    # address = "1GUkF7D5sKvYSk7ZnoFsmMoW2KhEFfmdWv" #
+    # address = "1KeqdkJNHhDfs2XkNvE9g1VtwbHUsNTUqv" #best good
+    # address = "12zT5wCcBLVRVdpQFqfT66drf39YDTabMW"
+    # address = "13JVVCB8qJKJiwDmy7WWtHfs6eQfg9WmD2"
+    # address = "1BTCorgHwCg6u2YSAWKgS17qUad6kHmtQW"
+    # address = "1YvCWqSpARRY7tyguMaPXHD9GCRyc74Hh" #heavy
+    # address = "1AzRkXiGpHbXyWok4uXvCzmezDuW8FGa3m" #?
+    # address = "1FcMK7cgm9yFTx1haVF6Betcr6NyV8Ty2i"
+
+    
+
+    # address = "16fXTTLZRft6eWb32zSihvGXSgZ6QmDQBB"
+    # report = detect_vulnerable_software(address)
+    # print(report)
+
+    pat = address[1:5]
+    
+    result = []
+    totalCnt = 0
+    allHistory = get_full_history(address)
+    result, r_du, totalCnt = extract_rsz_data(allHistory, address)
+
+    # words = get_words()
+    # for word in words:
+    #     result.append(json.loads(word))
+        
+    # result = result[:38]
+
+    verfiedCnt = 0
+    top45List = []
+    top46List = []
+    good47List = []
+    bigScnt = 0
+    totalBias =0
+    pubkey = ""
+    pubkey_byte = ""
+    for entity in result:
+        res = verify_sig_integrity(entity['r'], entity['s'], entity['z'], entity['pubkey'])
+        if res:
+            # print(entity)
+            pubkey = entity['pubkey']
+            bias = get_bias_bits(entity['r'])
+            totalBias += bias
+            verfiedCnt += 1
+
+            tx_data = call_cli(["getrawtransaction", entity['txid'], "true"])
+            tx_time = (tx_data['blocktime'])
+
+            tx_blockhash = (tx_data['blockhash'])
+            block_data = call_cli(["getblock", tx_blockhash])
+            tx_index = block_data["tx"].index(entity['txid'])
+            # print(tx_time)
+            
+            with open(f"./report/{pat}-total-1.txt", "a") as file:
+                final_res = entity
+                final_res['blocktime'] = tx_time
+                final_res['tx_index'] = tx_index
+                file.write(json.dumps(final_res)+'\n')
+                # file.write(json.dumps(entity)+'\n')
+
+        # print(res)
+    print(bigScnt)
+    print(totalBias)
+    print(len(result))
+    for i in range(0, len(result)):
+        for j in range(0, len(result)):
+            if int(result[i]['r'], 16) < int(result[j]['r'], 16):
+                temp = result[i]
+                result[i] = result[j]
+                result[j] = temp
+    print(len(result), "-", verfiedCnt, "-", totalCnt)
+    print(pubkey)
+    pubkey_byte = bytes.fromhex(pubkey)
+    print(pubkey_byte)
+
+    for entity in result:
+        with open(f"./report/{pat}-total-2.txt", "a") as file:
+            final_res = entity
+            file.write(json.dumps(final_res)+'\n')
+            # file.write(json.dumps(entity)+'\n')
+    result.sort(
+        key=lambda x: (
+            x["block_height"],
+            x["tx_index"],
+            x.get("vid", 0)
+        )
+    )
+    for entity in result:
+        with open(f"./report/{pat}-total-3.txt", "a") as file:
+            final_res = entity
+            file.write(json.dumps(final_res)+'\n')
+
     # chs_result = []
     # dup_txs = []
     # for entity in result:
@@ -1787,21 +2083,21 @@ if __name__ == "__main__":
     #         dup_txs.append(entity['txid'])
     #         chs_result.append(entity)
     #         # print(en)
-    #         # with open("12345.txt", "a") as file:
-    #         #     file.write(json.dumps(entity)+'\n')
+    # #         # with open("12345.txt", "a") as file:
+    # #         #     file.write(json.dumps(entity)+'\n')
 
     # dup_times = []
     # for entity in chs_result:
-    #     tx_data = call_cli(["getrawtransaction", entity['txid'], "true"])
-    #     tx_time = (tx_data['blocktime'])
-    #     print(tx_time)
-    #     if tx_time not in dup_times:
-    #         dup_times.append(tx_time)
-    #         # chs_result.append(entity)
-    #         with open("123456.txt", "a") as file:
-    #             final_res = entity
-    #             final_res['blocktime'] = tx_time
-    #             file.write(json.dumps(final_res)+'\n')
+        # tx_data = call_cli(["getrawtransaction", entity['txid'], "true"])
+        # tx_time = (tx_data['blocktime'])
+        # print(tx_time)
+        # if tx_time not in dup_times:
+        #     dup_times.append(tx_time)
+        #     # chs_result.append(entity)
+        #     with open("hkm-123456.txt", "a") as file:
+        #         final_res = entity
+        #         final_res['blocktime'] = tx_time
+        #         file.write(json.dumps(final_res)+'\n')
 
 
     # print(len(r_du))
@@ -1820,9 +2116,9 @@ if __name__ == "__main__":
     # res = solve_54_signatures_turbo(result, address)
     # res = solve_54_signatures_centered(result, pubkey_byte)
     # res = run_absolute_recovery(result, pubkey)
-    res = run_v9_2_sprint(result[0:53], pubkey)
-    
-    print(res)
+    # res = run_v9_2_sprint(result[0:53], pubkey)
+    # res = run_v9_2_sprint(result, pubkey)
+    # print(res)
 
     
 

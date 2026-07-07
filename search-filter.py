@@ -85,7 +85,7 @@ def get_full_history(address):
     # cmp_time = 1375315200  # 2013.8.1
     cmp_time = 1388534400  # 2014.1.1
     print(f"Starting deep history scan for {address}...")
-    
+    relaxID = 0
     while True:
         # Construct the URL with paging if we have a last_txid
         if last_txid:
@@ -95,6 +95,7 @@ def get_full_history(address):
             
         response = requests.get(url)
         if response.status_code != 200:
+            print(response.status_code)
             break
             
         batch = response.json()
@@ -103,19 +104,22 @@ def get_full_history(address):
 
         for tx in batch:
             block_time = tx.get('status', {}).get('block_time', 0)
-            if int(block_time) < cmp_time:
-                all_txs.extend(batch)
+            # if int(block_time) < cmp_time:
+            all_txs.extend(batch)
         last_txid = batch[-1]['txid'] # Update the anchor for the next page
         
         # Monitor progress
         last_date = batch[-1].get('status', {}).get('block_time', 0)
         print(f"Collected {len(all_txs)} txs... reached date: {time.ctime(last_date)}")
-        
+        relaxID += 1
         # Stop once we reach the end of 2012
         # if last_date > cmp_time: # Jan 1, 2012
         #     break
-        
-        time.sleep(0.5) # Avoid rate limiting
+        if relaxID < 10:
+            time.sleep(1) # Avoid rate limiting
+        else:
+            relaxID = 0
+            time.sleep(10)
 
     return all_txs
 
@@ -246,6 +250,7 @@ def extract_rsz_data(full_history, my_address):
     maxBiasCnt = 0
     rfound = False
     totalList = []
+    dup_address = []
 
     for tx in full_history:
         # raw_tx_hex = requests.get(f"https://mempool.space/api/tx/{tx['txid']}/hex").text
@@ -255,7 +260,12 @@ def extract_rsz_data(full_history, my_address):
         for i, vin in enumerate(tx.get('vin', [])):
             if vin.get('prevout', {}) == None or vin.get('prevout', {}) == {}:
                 continue
+            # cmpAddress = (vin.get('prevout', {}).get('scriptpubkey_address'))
+            # if cmpAddress not in dup_address:
+            #     print(cmpAddress," ", i)
+            #     dup_address.append(cmpAddress)
             if vin.get('prevout', {}).get('scriptpubkey_address') == my_address:
+            # if 1 == 1:
                 scriptsig = vin.get('scriptsig', '')
                 if not scriptsig or '30' not in scriptsig: continue
                 
@@ -265,15 +275,20 @@ def extract_rsz_data(full_history, my_address):
                     if to_entity not in totalList:
                         totalList.append(to_entity)
                     approBias = (detectBias(scriptsig))
-                    if approBias == 0:
-                        continue
+                    # if approBias == 0:
+                    #     continue
                     # print(tx['txid'])
                     # print(scriptsig)
-                    tx_data = call_cli(["getrawtransaction", tx['txid'], "true"])
-                    raw_tx_hex = tx_data['hex']
+
+                    # tx_data = call_cli(["getrawtransaction", tx['txid'], "true"])
+                    # raw_tx_hex = tx_data['hex']
 
                     if approBias > maxBias:
                         maxBias = approBias
+                        print(tx['txid'])
+                        # print(tx)
+                        block_height = tx.get('status', {}).get('block_height', 0)
+                        print(block_height)
                     # print(approBias)
                     der_start = scriptsig.find('30')
                     r_len = int(scriptsig[der_start+6:der_start+8], 16) * 2
@@ -319,7 +334,9 @@ def extract_rsz_data(full_history, my_address):
                     # # This simplified template works for single-input legacy txs:
                     # template = binascii.unhexlify(raw_tx_hex) + binascii.unhexlify("01000000")
                     # z = hashlib.sha256(hashlib.sha256(template).digest()).hexdigest()
-                    z = get_z_legacy(raw_tx_hex, i, spent_script_pub_key)
+                    
+                    # z = get_z_legacy(raw_tx_hex, i, spent_script_pub_key)
+                    z = ""
                     # print("z=>  ", z)
 
                     entry = {'txid': tx['txid'], 'r': r, 's': s, 'z': z, 'pubkey': pubkey, 'prefix': f'0x{scriptsig[0:2]}'}
@@ -348,9 +365,10 @@ def extract_rsz_data(full_history, my_address):
                         r_seen[r] = []
                         r_seen[r].append(s)
                     # r_seen[r] = tx['txid']
-                    if tx['txid'] in out_txs:
-                        continue
-                    out_txs.add(tx['txid'])
+
+                    # if tx['txid'] in out_txs:
+                    #     continue
+                    # out_txs.add(tx['txid'])
                     # print(tx['txid'])
 
                 except Exception as e:
@@ -426,32 +444,46 @@ if __name__ == "__main__":
     # report = detect_vulnerable_software(address)
     # print(report)
 
-    totalLists = get_words()
-    # print(totalLists)
-    idx = 0
-    for item in totalLists:
-        idx += 1
-        if idx < 378:
-            continue
-        address = item.split(",")[0]
-        if len(address) < 3:
-            continue
-        allHistory = get_full_history(address)
-        result, r_du, totalCnt, maxBias, maxBiasCnt, rfound = extract_rsz_data(allHistory, address)
-        verfiedCnt = 0
-        for entity in result:
-            res = verify_sig_integrity(entity['r'], entity['s'], entity['z'], entity['pubkey'])
-            # print(entity['r'])
-            if res:
-                verfiedCnt += 1
-            # print(res)
-        print(len(result), "-", verfiedCnt, "-", totalCnt)
-        print(len(r_du))
+    address = "1NB3ZXxs3vfq1hRhuSAZ3zPdQNrXBQB6ZX"
 
-        print(address)
-        with open("search-content.txt", "a") as file:
-            file.write(f'{address} -> totalcnt: {totalCnt}, realcnt: {len(result)}, vericnt: {verfiedCnt}, maxBias: {maxBias}, maxCnt: {maxBiasCnt}, rfound: {rfound}\n')
-        time.sleep(1)
+    allHistory = get_full_history(address)
+    result, r_du, totalCnt, maxBias, maxBiasCnt, rfound = extract_rsz_data(allHistory, address)
+    verfiedCnt = 0
+    # for entity in result:
+    #     res = verify_sig_integrity(entity['r'], entity['s'], entity['z'], entity['pubkey'])
+    #     # print(entity['r'])
+    #     if res:
+    #         verfiedCnt += 1
+        # print(res)
+    print(len(result), "-", verfiedCnt, "-", totalCnt)
+    print((rfound))
+
+    # totalLists = get_words()
+    # # print(totalLists)
+    # idx = 0
+    # for item in totalLists:
+    #     idx += 1
+    #     if idx < 378:
+    #         continue
+    #     address = item.split(",")[0]
+    #     if len(address) < 3:
+    #         continue
+    #     allHistory = get_full_history(address)
+    #     result, r_du, totalCnt, maxBias, maxBiasCnt, rfound = extract_rsz_data(allHistory, address)
+    #     verfiedCnt = 0
+    #     for entity in result:
+    #         res = verify_sig_integrity(entity['r'], entity['s'], entity['z'], entity['pubkey'])
+    #         # print(entity['r'])
+    #         if res:
+    #             verfiedCnt += 1
+    #         # print(res)
+    #     print(len(result), "-", verfiedCnt, "-", totalCnt)
+    #     print(len(r_du))
+
+    #     print(address)
+    #     with open("search-content.txt", "a") as file:
+    #         file.write(f'{address} -> totalcnt: {totalCnt}, realcnt: {len(result)}, vericnt: {verfiedCnt}, maxBias: {maxBias}, maxCnt: {maxBiasCnt}, rfound: {rfound}\n')
+    #     time.sleep(1)
 
     
     
