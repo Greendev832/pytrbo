@@ -541,6 +541,8 @@ def extract_rsz_data(full_history, my_address):
                     entry = {'txid': tx['txid'], 'r': r, 's': s, 'z': z, 'pubkey': pubkey, 'prefix': f'0x{scriptsig[0:2]}', 'vid': i}
                     block_height = tx.get('status', {}).get('block_height', 0)
                     entry['block_height'] = block_height
+                    fee = tx.get('fee', 0)
+                    entry['fee'] = fee
                     if entry not in recovered_data:
                         recovered_data.append(entry)
                         # if maxBias > 1:

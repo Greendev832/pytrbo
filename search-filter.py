@@ -287,6 +287,7 @@ def extract_rsz_data(full_history, my_address):
                         maxBias = approBias
                         print(tx['txid'])
                         # print(tx)
+                        # return
                         block_height = tx.get('status', {}).get('block_height', 0)
                         print(block_height)
                     # print(approBias)

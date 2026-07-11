@@ -706,7 +706,7 @@ def get_words():
         # with open("test.txt", "r") as f:
         # with open("keq-total-1.txt", "r") as f:
         # with open("9GP1-total-3.txt", "r") as f:
-        with open("./report/9GP1-total-3.txt", "r") as f:
+        with open("./report/AV4K-total-3.txt", "r") as f:
             content_string = f.read()
         # print(content_string)
         wordsList = content_string.split("\n")
