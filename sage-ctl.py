@@ -3,6 +3,7 @@ import ecdsa
 import base58
 import bech32
 import os
+import customset
 
 def number_to_bitcoin_address(n):
     # 1. Private Key: Convert number to 32-byte hex
@@ -31,24 +32,6 @@ def number_to_bitcoin_address(n):
     bitcoin_address = base58.b58encode(binary_address)
     
     return bitcoin_address.decode('utf-8')
-
-VAL_PATH = "number.pm"
-
-def get_num():
-    with open(VAL_PATH, "r") as f:
-        content_string = f.read()
-    wList = content_string.split("\n")
-    return int(wList[0])
-
-def set_num(val):
-    if os.path.exists(VAL_PATH):
-        with open(VAL_PATH, 'w') as file:
-            pass
-        with open(VAL_PATH, "a") as file:
-            file.write(str(val))
-    else:
-        with open(VAL_PATH, "a") as file:
-            file.write(str(val))
 
 def number_to_segwit_address(n):
     # 1. Private Key: Convert number to 32-byte hex
@@ -135,16 +118,22 @@ def generate_2012_uncompressed_suite(n):
     print(f"{pubkey.hex()}")
     print(f"Legacy Address (starts with 1): {address}")
     print("-" * 45)
+    return pk_hex, wif, pubkey.hex(), address
 
 
 
 if __name__ == "__main__":
     # Example: Generate address from the number 1
-    # my_number = 1
-    set_num(421981939125440)
-    my_number = get_num()
+    my_number = 123456333
+    temp = 0
+    customset.set_num(my_number)
+    my_number = customset.get_num()
     # print(f"Number: {my_number}")
     print(f"Bitcoin Address: {number_to_bitcoin_address(my_number)}")
     print(f"Bitcoin Address: {number_to_segwit_address(my_number)}")
-    # generate_modern_bitcoin(my_number)
-    # generate_2012_uncompressed_suite(my_number)
+    generate_modern_bitcoin(my_number)
+    pkey, owif, opub, oaddr = generate_2012_uncompressed_suite(my_number)
+    # customset.setK(owif)
+    print(owif)
+    print(opub)
+    print(oaddr)
