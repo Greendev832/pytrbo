@@ -133,7 +133,7 @@ if __name__ == "__main__":
     print(f"Bitcoin Address: {number_to_segwit_address(my_number)}")
     generate_modern_bitcoin(my_number)
     pkey, owif, opub, oaddr = generate_2012_uncompressed_suite(my_number)
-    # customset.setK(owif)
+    customset.setK(owif)
     print(owif)
     print(opub)
     print(oaddr)
