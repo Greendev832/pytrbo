@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <utility>
 #include <atomic>
+#include <stdexcept>
 #include <omp.h>
 
 #include <secp256k1.h>
@@ -22,7 +23,7 @@ static const uint8_t N_BYTES[32] = {
 static const uint64_t M48 = (1ULL << 48) - 1;
 
 // ---------- 256-bit helpers ----------
-struct U256 { uint64_t w[4]; }; // little-endian words
+struct U256 { uint64_t w[4]; };
 
 static inline U256 u256_from_be(const uint8_t* b) {
     U256 r;
@@ -65,7 +66,7 @@ static inline U256 u256_add(const U256& a, const U256& b) {
     return r;
 }
 
-// ---------- fast mod: a < 2^256, m > 2^255 => a < 2*m, one subtraction ----------
+// a < 2^256, m > 2^255  =>  a < 2*m, so one subtraction suffices.
 static inline U256 u256_mod_fast(const U256& a, const U256& m) {
     if (u256_cmp(a, m) < 0) return a;
     return u256_sub(a, m);
@@ -168,7 +169,7 @@ static inline U256 k_from(uint64_t seed_value, uint64_t t1, uint64_t t2, int pen
     return u256_add(rem, one);
 }
 
-// ---------- secp256k1 (per-thread context, created in parallel region) ----------
+// ---------- secp256k1 (per-thread context) ----------
 static inline bool mul_x_with_ctx(secp256k1_context* ctx, const U256& k, uint8_t out_x[32]) {
     uint8_t seckey[32];
     u256_to_be(k, seckey);
@@ -191,8 +192,7 @@ struct Entry {
 static std::vector<Entry> load_entries(const std::string& path) {
     std::ifstream f(path);
     if (!f.is_open()) {
-        fprintf(stderr, "[error] cannot open %s\n", path.c_str());
-        std::exit(1);
+        throw std::runtime_error("cannot open " + path);
     }
     std::stringstream ss; ss << f.rdbuf();
     std::string s = ss.str();
@@ -254,6 +254,97 @@ static std::vector<Entry> load_entries(const std::string& path) {
     return entries;
 }
 
+// ---------- worker ----------
+struct WorkerResult {
+    bool found;
+    U256 k;
+    U256 r;
+    uint64_t iters;
+};
+
+static WorkerResult scan_range(
+    uint64_t lo, uint64_t hi,
+    int seed_max, int size_t1, int size_t2,
+    const std::vector<U256>& targets,
+    const U256& N,
+    std::atomic<bool>& found,
+    bool debug
+) {
+    WorkerResult res = {false, {0,0,0,0}, {0,0,0,0}, 0};
+
+    #pragma omp parallel
+    {
+        secp256k1_context* ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN);
+        if (!ctx) {
+            #pragma omp critical
+            { fprintf(stderr, "[error] secp256k1_context_create failed in thread\n"); }
+        }
+
+        uint64_t local_iters = 0;
+
+        #pragma omp for schedule(dynamic, 1)
+        for (long long st = (long long)lo; st < (long long)hi; st++) {
+            if (found.load(std::memory_order_relaxed)) continue;
+            if (!ctx) continue;
+            uint64_t start_time = (uint64_t)st;
+            uint64_t base_ms = start_time * 1000;
+            for (int ss = 0; ss < seed_max; ss++) {
+                if (found.load(std::memory_order_relaxed)) break;
+                uint64_t seed = base_ms + ss;
+                for (int t1o = 0; t1o < size_t1; t1o++) {
+                    if (found.load(std::memory_order_relaxed)) break;
+                    uint64_t t1 = start_time + (uint64_t)t1o;
+                    for (int t2o = 0; t2o < size_t2; t2o++) {
+                        uint64_t t2 = t1 + (uint64_t)t2o;
+                        U256 k = k_from(seed, t1, t2, 0);
+                        uint8_t x[32];
+                        if (!mul_x_with_ctx(ctx, k, x)) continue;
+                        local_iters++;
+
+                        U256 xv = u256_from_be(x);
+                        U256 rv = u256_mod_fast(xv, N);
+
+                        if (debug) {
+                            #pragma omp critical(debug_print)
+                            {
+                                printf("[debug] seed=%llu t1=%llu t2=%llu k=%s r=%s\n",
+                                       (unsigned long long)seed,
+                                       (unsigned long long)t1,
+                                       (unsigned long long)t2,
+                                       u256_to_dec(k).c_str(),
+                                       u256_to_dec(rv).c_str());
+                                fflush(stdout);
+                            }
+                        }
+
+                        for (auto& tgt : targets) {
+                            if (u256_cmp(rv, tgt) == 0) {
+                                bool expected = false;
+                                if (found.compare_exchange_strong(expected, true)) {
+                                    #pragma omp critical(result)
+                                    {
+                                        res.found = true;
+                                        res.k = k;
+                                        res.r = rv;
+                                    }
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        #pragma omp atomic
+        res.iters += local_iters;
+
+        if (ctx) secp256k1_context_destroy(ctx);
+    }
+
+    return res;
+}
+
 // ---------- main ----------
 int main(int argc, char** argv) {
     std::string data_path = "tar_addresses.json";
@@ -267,11 +358,18 @@ int main(int argc, char** argv) {
         else if (a == "--threads" && i + 1 < argc) num_threads = std::stoi(argv[++i]);
         else if (a == "--data" && i + 1 < argc) data_path = argv[++i];
     }
-
+    if (num_threads < 1) num_threads = 1;
     omp_set_num_threads(num_threads);
-    printf("[main] using %d threads\n", num_threads);
 
-    auto entries = load_entries(data_path);
+    printf("[main] threads=%d\n", num_threads);
+
+    std::vector<Entry> entries;
+    try {
+        entries = load_entries(data_path);
+    } catch (const std::exception& ex) {
+        fprintf(stderr, "[error] %s\n", ex.what());
+        return 1;
+    }
     printf("[main] loaded %zu labels\n", entries.size());
 
     uint64_t temp_ms = test ? 60 : 15ULL * 60 * 1000;
@@ -282,89 +380,37 @@ int main(int argc, char** argv) {
     U256 N = u256_from_be(N_BYTES);
 
     for (auto& e : entries) {
+        if (e.time_ms < temp_ms) {
+            fprintf(stderr, "[warn] label %s time too small, skipping\n", e.label.c_str());
+            continue;
+        }
         uint64_t lo = e.time_ms - temp_ms;
         uint64_t hi = e.time_ms;
-        uint64_t total = (hi - lo) * seed_max * size_t1 * size_t2;
-        printf("[main] label=%s range=%llu~%llu iters=%llu\n",
+        uint64_t total = (hi - lo) * (uint64_t)seed_max * (uint64_t)size_t1 * (uint64_t)size_t2;
+        printf("[main] label=%s range=%llu~%llu iters=%llu targets=%zu\n",
                e.label.c_str(), (unsigned long long)lo, (unsigned long long)hi,
-               (unsigned long long)total);
+               (unsigned long long)total, e.targets.size());
         fflush(stdout);
 
         auto t0 = std::chrono::steady_clock::now();
         std::atomic<bool> found(false);
-        U256 found_k = {0,0,0,0};
-        U256 found_r = {0,0,0,0};
 
-        #pragma omp parallel
-        {
-            secp256k1_context* ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN);
-            if (!ctx) {
-                #pragma omp critical
-                { fprintf(stderr, "[error] secp256k1_context_create failed in thread\n"); }
-            }
-
-            #pragma omp for schedule(dynamic, 1)
-            for (long long st = (long long)lo; st < (long long)hi; st++) {
-                if (found.load(std::memory_order_relaxed)) continue;
-                if (!ctx) continue;
-                uint64_t start_time = (uint64_t)st;
-                uint64_t base_ms = start_time * 1000;
-                for (int ss = 0; ss < seed_max; ss++) {
-                    if (found.load(std::memory_order_relaxed)) break;
-                    uint64_t seed = base_ms + ss;
-                    for (int t1o = 0; t1o < size_t1; t1o++) {
-                        if (found.load(std::memory_order_relaxed)) break;
-                        uint64_t t1 = start_time + (uint64_t)t1o;
-                        for (int t2o = 0; t2o < size_t2; t2o++) {
-                            uint64_t t2 = t1 + (uint64_t)t2o;
-                            U256 k = k_from(seed, t1, t2, 0);
-                            uint8_t x[32];
-                            if (!mul_x_with_ctx(ctx, k, x)) continue;
-
-                            U256 xv = u256_from_be(x);
-                            U256 rv = u256_mod_fast(xv, N);
-
-                            if (debug) {
-                                #pragma omp critical(debug_print)
-                                {
-                                    printf("[debug] seed=%llu t1=%llu t2=%llu k=%s r=%s\n",
-                                           (unsigned long long)seed,
-                                           (unsigned long long)t1,
-                                           (unsigned long long)t2,
-                                           u256_to_dec(k).c_str(),
-                                           u256_to_dec(rv).c_str());
-                                    fflush(stdout);
-                                }
-                            }
-
-                            for (auto& tgt : e.targets) {
-                                if (u256_cmp(rv, tgt) == 0) {
-                                    bool expected = false;
-                                    if (found.compare_exchange_strong(expected, true)) {
-                                        found_k = k;
-                                        found_r = rv;
-                                    }
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (ctx) secp256k1_context_destroy(ctx);
-        }
+        WorkerResult res = scan_range(lo, hi, seed_max, size_t1, size_t2,
+                                      e.targets, N, found, debug);
 
         auto t1 = std::chrono::steady_clock::now();
         double sec = std::chrono::duration<double>(t1 - t0).count();
-        if (found.load()) {
-            printf("[main] SUCCESS label=%s k=%s r=%s in %.1fs\n",
-                   e.label.c_str(),
-                   u256_to_dec(found_k).c_str(),
-                   u256_to_dec(found_r).c_str(),
-                   sec);
+        double rate = res.iters / (sec > 0 ? sec : 1.0);
+
+        if (res.found) {
+            printf("[main] SUCCESS label=%s\n", e.label.c_str());
+            printf("[main]   k=%s\n", u256_to_dec(res.k).c_str());
+            printf("[main]   r=%s\n", u256_to_dec(res.r).c_str());
+            printf("[main]   iters=%llu in %.1fs (%.0f iter/s)\n",
+                   (unsigned long long)res.iters, sec, rate);
         } else {
-            printf("[main] NOT FOUND label=%s in %.1fs\n", e.label.c_str(), sec);
+            printf("[main] NOT FOUND label=%s iters=%llu in %.1fs (%.0f iter/s)\n",
+                   e.label.c_str(), (unsigned long long)res.iters, sec, rate);
         }
         fflush(stdout);
     }
