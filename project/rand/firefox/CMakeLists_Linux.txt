@@ -4,9 +4,18 @@ project(scanner CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# --- OpenMP ---
 find_package(OpenMP REQUIRED)
+if(NOT OpenMP_CXX_FOUND)
+    message(FATAL_ERROR "OpenMP not found. Install libomp-dev (Ubuntu) or libomp-devel (Fedora).")
+endif()
+
+# --- libsecp256k1 ---
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(SECP256K1 REQUIRED libsecp256k1)
+if(NOT SECP256K1_FOUND)
+    message(FATAL_ERROR "libsecp256k1 not found. Install libsecp256k1-dev (Ubuntu) or libsecp256k1-devel (Fedora).")
+endif()
 
 add_executable(scanner scanner.cpp)
 target_include_directories(scanner PRIVATE ${SECP256K1_INCLUDE_DIRS})
