@@ -9,6 +9,7 @@
 #include <chrono>
 #include <algorithm>
 #include <utility>
+#include <atomic>
 #include <omp.h>
 
 #include <secp256k1.h>
@@ -21,7 +22,7 @@ static const uint8_t N_BYTES[32] = {
 static const uint64_t M48 = (1ULL << 48) - 1;
 
 // ---------- 256-bit helpers ----------
-struct U256 { uint64_t w[4]; }; // little-endian words
+struct U256 { uint64_t w[4]; };
 
 static inline U256 u256_from_be(const uint8_t* b) {
     U256 r;
@@ -32,14 +33,12 @@ static inline U256 u256_from_be(const uint8_t* b) {
     }
     return r;
 }
-
 static inline void u256_to_be(const U256& a, uint8_t* b) {
     for (int i = 0; i < 4; i++) {
         uint64_t v = a.w[3 - i];
         for (int j = 7; j >= 0; j--) { b[i*8 + j] = v & 0xFF; v >>= 8; }
     }
 }
-
 static inline int u256_cmp(const U256& a, const U256& b) {
     for (int i = 3; i >= 0; i--) {
         if (a.w[i] < b.w[i]) return -1;
@@ -47,7 +46,6 @@ static inline int u256_cmp(const U256& a, const U256& b) {
     }
     return 0;
 }
-
 static inline U256 u256_sub(const U256& a, const U256& b) {
     U256 r; uint64_t borrow = 0;
     for (int i = 0; i < 4; i++) {
@@ -57,7 +55,6 @@ static inline U256 u256_sub(const U256& a, const U256& b) {
     }
     return r;
 }
-
 static inline U256 u256_add(const U256& a, const U256& b) {
     U256 r; uint64_t carry = 0;
     for (int i = 0; i < 4; i++) {
@@ -67,7 +64,6 @@ static inline U256 u256_add(const U256& a, const U256& b) {
     }
     return r;
 }
-
 static U256 u256_mod(const U256& a, const U256& m) {
     if (u256_cmp(a, m) < 0) return a;
     U256 rem = {0,0,0,0};
@@ -85,7 +81,7 @@ static U256 u256_mod(const U256& a, const U256& m) {
     return rem;
 }
 
-// ---------- 10 Integer <-> U256 ----------
+// ----------10 Integer <-> U256 ----------
 static U256 dec_to_u256(const std::string& dec) {
     U256 r = {0,0,0,0};
     for (char c : dec) {
@@ -99,7 +95,6 @@ static U256 dec_to_u256(const std::string& dec) {
     }
     return r;
 }
-
 static std::string u256_to_dec(const U256& v) {
     if (v.w[0] == 0 && v.w[1] == 0 && v.w[2] == 0 && v.w[3] == 0) return "0";
     U256 tmp = v;
@@ -134,7 +129,6 @@ static inline void firefox_random16(uint64_t base_seed, int pending, int n, uint
 
 // ---------- RC4 ----------
 struct RC4 { uint8_t S[256]; int i, j; };
-
 static inline void rc4_init(RC4& st, const uint8_t* key, int klen) {
     for (int i = 0; i < 256; i++) st.S[i] = (uint8_t)i;
     int j = 0;
@@ -144,7 +138,6 @@ static inline void rc4_init(RC4& st, const uint8_t* key, int klen) {
     }
     st.i = 0; st.j = 0;
 }
-
 static inline uint8_t rc4_next(RC4& st) {
     st.i = (st.i + 1) & 255;
     st.j = (st.j + st.S[st.i]) & 255;
@@ -156,7 +149,6 @@ static inline uint8_t rc4_next(RC4& st) {
 static inline U256 k_from(uint64_t seed_value, uint64_t t1, uint64_t t2, int pending = 0) {
     uint16_t draws[128];
     firefox_random16(seed_value, pending, 128, draws);
-
     uint8_t pool[256];
     for (int i = 0; i < 128; i++) {
         pool[2*i]   = (draws[i] >> 8) & 255;
@@ -173,13 +165,11 @@ static inline U256 k_from(uint64_t seed_value, uint64_t t1, uint64_t t2, int pen
         pool[base+2] ^= (x >> 16) & 255;
         pool[base+3] ^= (x >> 24) & 255;
     }
-
     RC4 st;
     rc4_init(st, pool, 256);
     rc4_next(st);
     uint8_t v[32];
     for (int i = 0; i < 32; i++) v[i] = rc4_next(st);
-
     U256 val = u256_from_be(v);
     U256 N = u256_from_be(N_BYTES);
     U256 Nm1 = N; Nm1.w[0] -= 1;
@@ -188,22 +178,26 @@ static inline U256 k_from(uint64_t seed_value, uint64_t t1, uint64_t t2, int pen
     return u256_add(rem, one);
 }
 
-// ---------- secp256k1 ----------
-static secp256k1_context* g_ctx = nullptr;
+// ---------- secp256k1 (thread-safe) ----------
+// Each thread gets its own context via thread_local.
+static thread_local secp256k1_context* tl_ctx = nullptr;
 
-static void ensure_ctx() {
-    if (!g_ctx) g_ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN);
+static inline secp256k1_context* get_ctx() {
+    if (!tl_ctx) {
+        tl_ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN);
+    }
+    return tl_ctx;
 }
 
 static inline bool mul_x(const U256& k, uint8_t out_x[32]) {
-    ensure_ctx();
+    secp256k1_context* ctx = get_ctx();
     uint8_t seckey[32];
     u256_to_be(k, seckey);
     secp256k1_pubkey pub;
-    if (!secp256k1_ec_pubkey_create(g_ctx, &pub, seckey)) return false;
+    if (!secp256k1_ec_pubkey_create(ctx, &pub, seckey)) return false;
     uint8_t out[33];
     size_t outlen = 33;
-    secp256k1_ec_pubkey_serialize(g_ctx, out, &outlen, &pub, SECP256K1_EC_COMPRESSED);
+    secp256k1_ec_pubkey_serialize(ctx, out, &outlen, &pub, SECP256K1_EC_COMPRESSED);
     memcpy(out_x, out + 1, 32);
     return true;
 }
@@ -212,7 +206,7 @@ static inline bool mul_x(const U256& k, uint8_t out_x[32]) {
 struct Entry {
     std::string label;
     uint64_t time_ms;
-    std::vector<U256> targets; // 10Integer -> U256
+    std::vector<U256> targets;
 };
 
 static std::vector<Entry> load_entries(const std::string& path) {
@@ -231,7 +225,6 @@ static std::vector<Entry> load_entries(const std::string& path) {
         pos = obj_end + 1;
 
         Entry e;
-
         size_t lp = obj.find("\"label\"");
         if (lp == std::string::npos) continue;
         size_t lq1 = obj.find('"', obj.find(':', lp) + 1);
@@ -275,12 +268,18 @@ static std::vector<Entry> load_entries(const std::string& path) {
 int main(int argc, char** argv) {
     std::string data_path = "tar_addresses.json";
     bool test = false, debug = false;
+    int num_threads = omp_get_num_procs();
+
     for (int i = 1; i < argc; i++) {
         std::string a = argv[i];
         if (a == "--test") test = true;
         else if (a == "--debug") debug = true;
+        else if (a == "--threads" && i + 1 < argc) num_threads = std::stoi(argv[++i]);
         else if (a == "--data" && i + 1 < argc) data_path = argv[++i];
     }
+
+    omp_set_num_threads(num_threads);
+    printf("[main] using %d threads\n", num_threads);
 
     auto entries = load_entries(data_path);
     printf("[main] loaded %zu labels\n", entries.size());
@@ -302,20 +301,23 @@ int main(int argc, char** argv) {
         fflush(stdout);
 
         auto t0 = std::chrono::steady_clock::now();
-        volatile int found = 0;
+        std::atomic<bool> found(false);
         U256 found_k = {0,0,0,0};
         U256 found_r = {0,0,0,0};
 
         #pragma omp parallel for schedule(dynamic, 1)
         for (long long st = (long long)lo; st < (long long)hi; st++) {
-            if (found) continue;
+            if (found.load(std::memory_order_relaxed)) continue;
             uint64_t start_time = (uint64_t)st;
             uint64_t base_ms = start_time * 1000;
-            for (int ss = 0; ss < seed_max && !found; ss++) {
+            for (int ss = 0; ss < seed_max; ss++) {
+                if (found.load(std::memory_order_relaxed)) break;
                 uint64_t seed = base_ms + ss;
-                for (int t1o = 0; t1o < size_t1 && !found; t1o++) {
+                for (int t1o = 0; t1o < size_t1; t1o++) {
+                    if (found.load(std::memory_order_relaxed)) break;
                     uint64_t t1 = start_time + (uint64_t)t1o;
-                    for (int t2o = 0; t2o < size_t2 && !found; t2o++) {
+                    for (int t2o = 0; t2o < size_t2; t2o++) {
+                        if (found.load(std::memory_order_relaxed)) break;
                         uint64_t t2 = t1 + (uint64_t)t2o;
                         U256 k = k_from(seed, t1, t2, 0);
                         uint8_t x[32];
@@ -336,13 +338,10 @@ int main(int argc, char** argv) {
 
                         for (auto& tgt : e.targets) {
                             if (u256_cmp(rv, tgt) == 0) {
-                                #pragma omp critical
-                                {
-                                    if (!found) {
-                                        found = 1;
-                                        found_k = k;
-                                        found_r = rv;
-                                    }
+                                bool expected = false;
+                                if (found.compare_exchange_strong(expected, true)) {
+                                    found_k = k;
+                                    found_r = rv;
                                 }
                                 break;
                             }
@@ -354,7 +353,7 @@ int main(int argc, char** argv) {
 
         auto t1 = std::chrono::steady_clock::now();
         double sec = std::chrono::duration<double>(t1 - t0).count();
-        if (found) {
+        if (found.load()) {
             printf("[main] SUCCESS label=%s k=%s r=%s in %.1fs\n",
                    e.label.c_str(),
                    u256_to_dec(found_k).c_str(),
