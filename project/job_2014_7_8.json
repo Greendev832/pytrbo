@@ -1,0 +1,2026 @@
+[{
+  "address": "31oSGBBNrpCiENH3XMZpiP6GTC4tad4bMy",
+  "current_balance_btc": "17.23643265"
+}, {
+  "address": "1Es1BQJvATSKiC1Hx6yXJbZ28BRMJZxn8a",
+  "current_balance_btc": "6.45236799"
+}, {
+  "address": "19b2XFDQSTFtTsuwy9E44dCPr9Zw5U7bnx",
+  "current_balance_btc": "5.4764893"
+}, {
+  "address": "12BXJPPKc8S2sZraiVLgy6aj7k4ZwWq9g9",
+  "current_balance_btc": "5.12919845"
+}, {
+  "address": "1HsW6nrYWVE4vJqoJEVYFnabvq18zX459t",
+  "current_balance_btc": "3.5999"
+}, {
+  "address": "1C3tirEydDmTZSuVQzk5zAgF3uGwVRwB41",
+  "current_balance_btc": "3.23666217"
+}, {
+  "address": "1772w828thEAdWoALhiuYiEgeN2XEpgHUA",
+  "current_balance_btc": "2.61750951"
+}, {
+  "address": "17qHeFPgsvEqVyRgmzfRdskpjpWLWVxuhK",
+  "current_balance_btc": "2.0246948"
+}, {
+  "address": "19YgUrvdgkaKavr2cUFbE5UqGGDyw1hEaM",
+  "current_balance_btc": "1.49396222"
+}, {
+  "address": "1NFeBp9s5aQ1iZ26uWyiK2AYUXHxs7bFmB",
+  "current_balance_btc": "1.24004963"
+}, {
+  "address": "1FGzuz2E6u1kh4h9DcjR4Z2rfJSoGfiiC3",
+  "current_balance_btc": "1.19741237"
+}, {
+  "address": "1FTDuVGZrmXy2BMAKmV122U9pmcUvViZrM",
+  "current_balance_btc": "1.14888542"
+}, {
+  "address": "1PiR68SkaBNa9tArFsvdpcp3VGXTKMgnHt",
+  "current_balance_btc": "1.08053217"
+}, {
+  "address": "13iQ5QNaw1X79ZRdNgxqv87QqoWxhgAPCY",
+  "current_balance_btc": "1.0568727"
+}, {
+  "address": "1MGEQX3TQ9wije1XpXNW66Cs2oJ1Z1ymTk",
+  "current_balance_btc": "1.00511456"
+}, {
+  "address": "1G5HD9RPzZuG2Qbzrj1KYoK4AoB3nDM7Pr",
+  "current_balance_btc": "0.97968679"
+}, {
+  "address": "1K3YHyHqBcw1cvgtfPBcT9gDQFZYzdaBbK",
+  "current_balance_btc": "0.9027393"
+}, {
+  "address": "1NyZnnVo5gBKaGSUNdGVyEdkDiph8aSztH",
+  "current_balance_btc": "0.84692447"
+}, {
+  "address": "19oMJbHzr82oonoFPrtGgCnN2ByPNoryD5",
+  "current_balance_btc": "0.808742"
+}, {
+  "address": "1GzwuJpjR7UJaxJkXWvQ8xZYVTUcD2MN16",
+  "current_balance_btc": "0.65172415"
+}, {
+  "address": "1K4ZXRHpfvbEyM5XTtyXhJaLWBE7agnCce",
+  "current_balance_btc": "0.57926964"
+}, {
+  "address": "1B91BS8Jdo1TiPQQ9cdNAAo4ifCZeoTwkt",
+  "current_balance_btc": "0.51592869"
+}, {
+  "address": "1Po1oXMCWobE6kxWr8rJEP1SRq71JSD3t4",
+  "current_balance_btc": "0.4875408"
+}, {
+  "address": "1GysXMDoDDkgrJcAK92SdEohbHvabu1PTX",
+  "current_balance_btc": "0.44002884"
+}, {
+  "address": "1FEY6zZajZikMqCPLDGK9cC8JWffAXgrGW",
+  "current_balance_btc": "0.42725954"
+}, {
+  "address": "1CgD88HMPcBSQ3C5ykLEWFiCJpJ1jryBFg",
+  "current_balance_btc": "0.40749213"
+}, {
+  "address": "1GmTzkZD4aVyVdLekBm9FCG5CQHsurP9dP",
+  "current_balance_btc": "0.40432474"
+}, {
+  "address": "1GviHhQnjZjiba8ut2DWExWenkZC4TZc27",
+  "current_balance_btc": "0.36628932"
+}, {
+  "address": "1HWqsgnSd12Gv8SpoUMi1Cj8hp79BTSpW7",
+  "current_balance_btc": "0.35467476"
+}, {
+  "address": "175KmX2To434uwpRSgG6gjZGFJqkK1qfzR",
+  "current_balance_btc": "0.34669999"
+}, {
+  "address": "1C6pDiDBQuhNzM5b7jb7AnBQZvo3LrmSro",
+  "current_balance_btc": "0.30245887"
+}, {
+  "address": "1FMunNdjYP7k3qJto4A4HaoaDz4eGPs1kL",
+  "current_balance_btc": "0.27266403"
+}, {
+  "address": "19TpZDBUWAhMhKPok64ZkTEbnkC2gXZVpa",
+  "current_balance_btc": "0.23072537"
+}, {
+  "address": "1AXy9EU2aWHxCeVkh8ysceLG8QRMjUzfn8",
+  "current_balance_btc": "0.22637466"
+}, {
+  "address": "1Ljx7LgCvzZsBi6L967zsFE8t6zP7Vibqw",
+  "current_balance_btc": "0.2153007"
+}, {
+  "address": "1EG4gWxe9UJkPXowU3y154SuCkTcKGm99k",
+  "current_balance_btc": "0.21057612"
+}, {
+  "address": "14SUuQNnzAt6Q9yyaFxNuWkt1t9E5v14L6",
+  "current_balance_btc": "0.20392987"
+}, {
+  "address": "1Bowndwsar5sERwFCJVsTxUszXiJCxtpXU",
+  "current_balance_btc": "0.18502419"
+}, {
+  "address": "1Jw8swogTV2Y1eqePj4kYMUaRMWbscDCoM",
+  "current_balance_btc": "0.16739785"
+}, {
+  "address": "1AybhHJ1X45P7L66iPG9KhWe9ERnLV3QHb",
+  "current_balance_btc": "0.16714211"
+}, {
+  "address": "14Dd5JhxyYgmg8yzJVGY1T11CKgmHJQwZU",
+  "current_balance_btc": "0.16500145"
+}, {
+  "address": "1Q6oJ7EoXpPxCKAAdjCn3jHsp97My4HYki",
+  "current_balance_btc": "0.1523"
+}, {
+  "address": "14my4LWebJjsfthDfihmVsGWyWG8Rbkyrd",
+  "current_balance_btc": "0.146567"
+}, {
+  "address": "1Bm7uoCfdJRugkx3uYqxX9uax65B7pThdf",
+  "current_balance_btc": "0.13920842"
+}, {
+  "address": "152PVs5BJXc6ffpnTfodo8gk4459ga2rGo",
+  "current_balance_btc": "0.13251686"
+}, {
+  "address": "1JJ65RWftzKPz2ro3WFm79DmV6cXskDJDj",
+  "current_balance_btc": "0.12425"
+}, {
+  "address": "15A2JKHV9jJaDdQWdGDdgbMLeYs17kAd8T",
+  "current_balance_btc": "0.12188655"
+}, {
+  "address": "1FknesSfmPCQdoU9sst3bo47aEd9Pdj87u",
+  "current_balance_btc": "0.110392"
+}, {
+  "address": "1NdGagp4LV6zY2wM2AhEMetnUkeZyqAbRb",
+  "current_balance_btc": "0.109462"
+}, {
+  "address": "12YavP4mzNkBDNmfN4gJumcWAMTiBUoWfg",
+  "current_balance_btc": "0.10858307"
+}, {
+  "address": "19vnYwAn4VfWxn6RNZok4mqRZjHKNT9vUW",
+  "current_balance_btc": "0.1073282"
+}, {
+  "address": "15XSfHWNhZm4TbpH91cyfcNFmSCNA7hXsa",
+  "current_balance_btc": "0.10457413"
+}, {
+  "address": "1EgrpFYkJeVSvJHH8DLTXbvfAD7KZsYdAa",
+  "current_balance_btc": "0.10131959"
+}, {
+  "address": "1GT7CTf9uQxBNmn86WtM3r9VjvqMx9Pkqd",
+  "current_balance_btc": "0.0998"
+}, {
+  "address": "186zCLUuUp67A13bbET3PWmDLdcve1Zkr2",
+  "current_balance_btc": "0.09515226"
+}, {
+  "address": "13v86MqrxZ3LgwPN1yE9fxF2cj2pbvK2NA",
+  "current_balance_btc": "0.09284546"
+}, {
+  "address": "16Ft2EFwMuUKCE1QqWdWKP2No1Qg5tmdBa",
+  "current_balance_btc": "0.0909438"
+}, {
+  "address": "19JjgFfqLJVpjvXC9ueDJJqBqKW7HGuYiU",
+  "current_balance_btc": "0.09047322"
+}, {
+  "address": "15tG8YfWsL4pMw5QC9LAeorTxq9J1Amm5m",
+  "current_balance_btc": "0.08804884"
+}, {
+  "address": "14eXuFNSS4i6uwGDfHFvmQ1WFNuzPoUvCM",
+  "current_balance_btc": "0.08731084"
+}, {
+  "address": "1EY6UccSX9tQiaavxEPHkKrhUSYHtYUbLd",
+  "current_balance_btc": "0.07591197"
+}, {
+  "address": "1BAALJNCZNRHCQSrSjb5NEjb5d3SFV4qeT",
+  "current_balance_btc": "0.07405535"
+}, {
+  "address": "1ANZ9M7pBheVZtA7WBg5LmvtmFceZWwDYy",
+  "current_balance_btc": "0.07278417"
+}, {
+  "address": "1NP6CghKws5CXKUR7jiKtJeYBZUV4BKUEs",
+  "current_balance_btc": "0.07131749"
+}, {
+  "address": "12gkFcPuuow6TRkK1MbqWgEcrChRSUm5LM",
+  "current_balance_btc": "0.07051046"
+}, {
+  "address": "1GWzkDbvnFDk5c6XqUywtoE2Dw9GMkJhmE",
+  "current_balance_btc": "0.06926794"
+}, {
+  "address": "18sDPCN9rE6TP3N4YpKveAyoefdrJT989F",
+  "current_balance_btc": "0.0649523"
+}, {
+  "address": "113ekKs8Vgi3aiR486Ukjx6cCpYHW46tom",
+  "current_balance_btc": "0.06453139"
+}, {
+  "address": "1M9GEzPLMc8vqV5bqv5ioPbY7nyCE1ndjD",
+  "current_balance_btc": "0.06338796"
+}, {
+  "address": "1239Rx6Ck4AkWzoFAHyjEfGinRMdmJz2f3",
+  "current_balance_btc": "0.06317278"
+}, {
+  "address": "15QN22d2nzNM2FE9dyPrwAdLfxUkgavSUY",
+  "current_balance_btc": "0.06145727"
+}, {
+  "address": "1N7UmSfRiR5nZ3BioubYxM5VKs9icWZ1BF",
+  "current_balance_btc": "0.05998501"
+}, {
+  "address": "1Cjgo9PLYRuc91TEL4bBcLLBPGjs2iVtSX",
+  "current_balance_btc": "0.05817696"
+}, {
+  "address": "1Uvg5ZTk5i1gN3Ct7WQsnVzTgTSqfRG1r",
+  "current_balance_btc": "0.05779858"
+}, {
+  "address": "1ANiiJvCQpMdMEoeLdX38ypNfa8GEEKxGL",
+  "current_balance_btc": "0.05764679"
+}, {
+  "address": "1BG2hkiQz94VqTonTLzm7ttgEp9aHqUaDs",
+  "current_balance_btc": "0.05630277"
+}, {
+  "address": "15Jka9dPLEw1JAYPeRD2tYngZfUT48zCAX",
+  "current_balance_btc": "0.05334255"
+}, {
+  "address": "1PAysBnSGcefERtqk1RwyirKgGHgD9Uy83",
+  "current_balance_btc": "0.0501925"
+}, {
+  "address": "1551hBHmTPoVD48w37W5nF7VnqNxdbWGJ3",
+  "current_balance_btc": "0.049"
+}, {
+  "address": "18BviNF1Eobzt2RTWeAdRj5UTxo5vPp164",
+  "current_balance_btc": "0.0485824"
+}, {
+  "address": "1GaH96svqjLp4dRThz2Gdrogv2pV2bbazW",
+  "current_balance_btc": "0.04282718"
+}, {
+  "address": "16W2RLHySLVVVbQXiS6qz9vJns2m1u32HT",
+  "current_balance_btc": "0.04127008"
+}, {
+  "address": "1CvmeyYJC3e1KMjEY3oK5xj7WNh68oUwKe",
+  "current_balance_btc": "0.04083296"
+}, {
+  "address": "1KQuPuPbE95PYWVWsZ2oGhdFCbz5oQirUS",
+  "current_balance_btc": "0.03984991"
+}, {
+  "address": "1D5Ybo87FYHc6t9wewATisXJBrHbVniDSx",
+  "current_balance_btc": "0.0398"
+}, {
+  "address": "1JJakLX3anQXcawK5QuQQ1vHxHntoGUZMP",
+  "current_balance_btc": "0.03909206"
+}, {
+  "address": "17ZjF9U7rrjpBomtKYqq1BhQcJuqdjR3R8",
+  "current_balance_btc": "0.03577087"
+}, {
+  "address": "1JsdD3c4YTAGJw5EuUhcVqtMzAVUv32DL7",
+  "current_balance_btc": "0.03518692"
+}, {
+  "address": "15mfadUQAW9WDxJwtKCVrf6ZwPB4KwYBBR",
+  "current_balance_btc": "0.03422069"
+}, {
+  "address": "1GXk94Nh5T3e45zaBttSL2ad4b4mBex4jp",
+  "current_balance_btc": "0.0321239"
+}, {
+  "address": "1FpVcY7Up1V6AcBAzMZToXRGs9rFP5EfZD",
+  "current_balance_btc": "0.03196404"
+}, {
+  "address": "1DqDBRbv9nz4uen4g5u7Gbs56iZwHGCPgK",
+  "current_balance_btc": "0.03093163"
+}, {
+  "address": "1Cvs94Zqvd1c8AWEiYAUjyqC3yAxShsB7d",
+  "current_balance_btc": "0.02935377"
+}, {
+  "address": "1BiGNoRAAwYwyL69CN63mYcUpy3SV5CJtb",
+  "current_balance_btc": "0.02890208"
+}, {
+  "address": "1GPMS3K7QWrpxYeE3VNpLSKqUgXdGykYv6",
+  "current_balance_btc": "0.02861254"
+}, {
+  "address": "13zoKQgpCkM1FGRCVhYJiCDVw4T3F4RYyN",
+  "current_balance_btc": "0.02776935"
+}, {
+  "address": "1Hk2oT1wwDX2ZXsvkjj9p5nTX8aFwsMF4p",
+  "current_balance_btc": "0.02756501"
+}, {
+  "address": "1JbDrERaATtehsDW9csYcuCVghTrt2Gujg",
+  "current_balance_btc": "0.02745"
+}, {
+  "address": "1NSUihBMxuEsvmyxYmFKEj9ecdD9Z8YB7F",
+  "current_balance_btc": "0.02538883"
+}, {
+  "address": "1APYuH2z5CL9p5K2dxB4hR1MeNq9LnFFf4",
+  "current_balance_btc": "0.02332676"
+}, {
+  "address": "13uXZFyg1YaWzYU69mtkb3TXb6dCTYYfqq",
+  "current_balance_btc": "0.02216088"
+}, {
+  "address": "19ead5WuF3rZQtBwbXSTuDQU5y9tYWooHN",
+  "current_balance_btc": "0.0214338"
+}, {
+  "address": "1JBsABiqVypZyAbBtKUex1wbYy9VfE6766",
+  "current_balance_btc": "0.02090244"
+}, {
+  "address": "14L55Bu9f4LsCS7ddK8FfftACYvGjyWWcC",
+  "current_balance_btc": "0.02087376"
+}, {
+  "address": "1FEFUDxpp7xhxvPisQDz8gwCi3C6qdsi1b",
+  "current_balance_btc": "0.0202449"
+}, {
+  "address": "12MZJrC3dLmbwmiHudpqxxzHHx4CphofJd",
+  "current_balance_btc": "0.02015949"
+}, {
+  "address": "1L8Di1cBbGz917qumXdy9gKnghx8Xi65j",
+  "current_balance_btc": "0.01939985"
+}, {
+  "address": "1MBpEExhnCcbAy5rducRB1UsmyK1Ue4ohW",
+  "current_balance_btc": "0.01845269"
+}, {
+  "address": "1K6JtSvrHtyFmxdtGZyZEF7ydytTGqasNc",
+  "current_balance_btc": "0.01837444"
+}, {
+  "address": "1K5GXdhvsqx582deJFB7TthLUqhtyR2bia",
+  "current_balance_btc": "0.01792975"
+}, {
+  "address": "1LdDiQfMTdMhZZ7yfHRhXS2w42cc7myMTY",
+  "current_balance_btc": "0.01779035"
+}, {
+  "address": "17Q4qsAHpaSw4zdpN9r6o8q76Wt2qiihX4",
+  "current_balance_btc": "0.01775"
+}, {
+  "address": "1AuvSmi3CEasTsHoRHcm55XMzTRaR3U2cL",
+  "current_balance_btc": "0.01768796"
+}, {
+  "address": "14yzWedti2M8m7wadaiJAJy8nvLmyaH9ps",
+  "current_balance_btc": "0.01730319"
+}, {
+  "address": "1JRLQ6VYn2xqTmxS1VXzKg34ntG9ZV2Z4K",
+  "current_balance_btc": "0.0171707"
+}, {
+  "address": "16CrCZNynqK826GCmCMgKbXXpkLSVex7aC",
+  "current_balance_btc": "0.0170227"
+}, {
+  "address": "1NojNK3wz6AZYx2kE7XoKgnqaTRbDy2Btj",
+  "current_balance_btc": "0.01682199"
+}, {
+  "address": "1HeTfNcoh14mftxTkS7vMJVnBaHhMfBmRx",
+  "current_balance_btc": "0.0165"
+}, {
+  "address": "17T15VAZ9XwSh23jVcsujkCLmX4VkKyjLT",
+  "current_balance_btc": "0.01560201"
+}, {
+  "address": "17Wu4oeSUMFS73xHSxs9aKB2KgZ668iUWK",
+  "current_balance_btc": "0.01541332"
+}, {
+  "address": "1FduyBDH1Gep26NVeKuhSjw7KK1JvSvVaa",
+  "current_balance_btc": "0.01490038"
+}, {
+  "address": "1FX4adgxu3xy3s7hVgXbUMXCwFPAX6nPg2",
+  "current_balance_btc": "0.0147145"
+}, {
+  "address": "16CbjickxZLVKSgnqagxW2B3QNbcASYLvU",
+  "current_balance_btc": "0.01393829"
+}, {
+  "address": "17QpqJ6dqfQG158kK1F68KG3eYTnfU9smK",
+  "current_balance_btc": "0.01361545"
+}, {
+  "address": "17EkWAgteBa6Ne6E158MP4s1x2Bpif2RM6",
+  "current_balance_btc": "0.01348175"
+}, {
+  "address": "1APDaS5wrHmtFYsGv5UpFWGd7TJDCZnoPJ",
+  "current_balance_btc": "0.01323642"
+}, {
+  "address": "1A4DdPQ9MttGw5i9B4tkQJ91V9b4NDMpmZ",
+  "current_balance_btc": "0.01307087"
+}, {
+  "address": "19d9egVvZBV5zosRV28W4hryzvCfYZcXe8",
+  "current_balance_btc": "0.01301385"
+}, {
+  "address": "17eUGZVsNtCfk2FR87TUcxoudfR7TdNSQT",
+  "current_balance_btc": "0.01268911"
+}, {
+  "address": "16tFw9pGQki1aTnW1eta3fLaxQSxgeJcC2",
+  "current_balance_btc": "0.01265059"
+}, {
+  "address": "1JVXNeiy7zaw4NDiFpqPPSkPGXd6sYYsYd",
+  "current_balance_btc": "0.01263431"
+}, {
+  "address": "1AeuBYQbmUoYikCMyA89RpvnBcC9N7xxFZ",
+  "current_balance_btc": "0.01248051"
+}, {
+  "address": "1JbvvJmbSw6FEdyZ6SNzTR6wdnWReK6Kvt",
+  "current_balance_btc": "0.01200363"
+}, {
+  "address": "144fuZHP6PvKiPYYNFVVpHuc6o3KxhoEoc",
+  "current_balance_btc": "0.011663"
+}, {
+  "address": "1F35UZfbsBqKcTYrQsT1mC85iiFAzQsEsi",
+  "current_balance_btc": "0.01121602"
+}, {
+  "address": "17SHdGJtuKrn149wDKAT1TY8ZMfniqLgcV",
+  "current_balance_btc": "0.011096"
+}, {
+  "address": "1972deGJbdNupEeJVqVwvjco64VvwR9qpq",
+  "current_balance_btc": "0.01030471"
+}, {
+  "address": "19bSt8oWg3qQ7BSezVg6c1APE8H7YpGpnM",
+  "current_balance_btc": "0.01008688"
+}, {
+  "address": "18LmH61Au1ydfujqVzz8oYGAfHeLJQaHk7",
+  "current_balance_btc": "0.01"
+}, {
+  "address": "1MermYanvFpmsUDq12rtxnFCUisrsJrdg5",
+  "current_balance_btc": "0.0099"
+}, {
+  "address": "1NrCr71TKygoHTMiNdFsruZDQ7zDMUBvaB",
+  "current_balance_btc": "0.00980377"
+}, {
+  "address": "1MAQcGgCvaqY2mqndCRUmWuVE3zx1FRvyg",
+  "current_balance_btc": "0.00978008"
+}, {
+  "address": "1BVoox1fDuTBNh8sdMxHnQjMvCPzvXfrCr",
+  "current_balance_btc": "0.0097"
+}, {
+  "address": "1KyBnZV4yt3yxzfE3qMTf4xiKDfCRpQmUg",
+  "current_balance_btc": "0.0097"
+}, {
+  "address": "1Q9REqBG17UPKLf5T6PiuKx6sXo3sGpRiq",
+  "current_balance_btc": "0.0097"
+}, {
+  "address": "1JBXYFM1REYUUYqksEtMLGwAQXF3pbs22c",
+  "current_balance_btc": "0.00964821"
+}, {
+  "address": "1FrCw3hcUj6fUMtNB8u2S7iequVCYk3wnV",
+  "current_balance_btc": "0.00934779"
+}, {
+  "address": "19gKgzWehQxmChtgAsmeUvU6TVKid9zfC7",
+  "current_balance_btc": "0.00927771"
+}, {
+  "address": "1EbkKK4ejBFP3pRKaJxSDtNnLs9tp7DMHN",
+  "current_balance_btc": "0.00915403"
+}, {
+  "address": "137YrkKfLwSJ8ocng2CJCnfqkYUgACoxM6",
+  "current_balance_btc": "0.009083"
+}, {
+  "address": "15Yik6xdMsvgBvnKJp33xt6WGnXP7wG2sK",
+  "current_balance_btc": "0.0088"
+}, {
+  "address": "18XQcMpv2yMecLLJCzCoFBKef8GjeD659P",
+  "current_balance_btc": "0.00874056"
+}, {
+  "address": "16nZXD5ZUa9EiNnmyy6YTgHoWkEe8vJuTt",
+  "current_balance_btc": "0.00868"
+}, {
+  "address": "1ChZNk7vVtqDp9aomnwNmr6DUhQseFZNG2",
+  "current_balance_btc": "0.00853005"
+}, {
+  "address": "1C95xiqUpXrYhJ32MsG6snL9f6DnEjzf4Y",
+  "current_balance_btc": "0.00792879"
+}, {
+  "address": "1FN6N6Kbtsrq6JuwDkYsHfXbUFDRQ3mLdB",
+  "current_balance_btc": "0.00783282"
+}, {
+  "address": "1H86cA4pyvdzXh1Ciktbf6VH2aiPSrCLyd",
+  "current_balance_btc": "0.00753072"
+}, {
+  "address": "1AfkZJWAGU4bYPoJD5L8LNL4KyK8AawVBU",
+  "current_balance_btc": "0.00740373"
+}, {
+  "address": "1DaTSU6ntHip2AojGoiSAZXGcn2FVijzBj",
+  "current_balance_btc": "0.00732583"
+}, {
+  "address": "1LifmeXYHeUe2qdKWBGVwfbUCMMrwYtoMm",
+  "current_balance_btc": "0.0070058"
+}, {
+  "address": "1ALhTuE1ms66g8io4zkhp2SDB2x2KihXkx",
+  "current_balance_btc": "0.00689738"
+}, {
+  "address": "17tbTngLVQZWCcHCbcyhFu5YFQmFoo4rLk",
+  "current_balance_btc": "0.00683173"
+}, {
+  "address": "1HG3s4Ext3sTqBTHrgftyUzG3cvx5ZbPCj",
+  "current_balance_btc": "0.00666009"
+}, {
+  "address": "1HSA9m4ofnagaRMgbrAYVNpsPCtyMzukyg",
+  "current_balance_btc": "0.00661012"
+}, {
+  "address": "1D5BPYfjUyeNSGqCRDZwkVzKScRiMkZMfC",
+  "current_balance_btc": "0.00659101"
+}, {
+  "address": "1NjwfqsgtsMsxvnS1ae3HvWoSPJj5ZUr8v",
+  "current_balance_btc": "0.00640525"
+}, {
+  "address": "1PNXwFgQc3s8EpmHzUhVtpaDjbjVGUTUQK",
+  "current_balance_btc": "0.00635803"
+}, {
+  "address": "1CBvWYVuRVk8hkFL9D99HVqknBcyVkTzkT",
+  "current_balance_btc": "0.0063281"
+}, {
+  "address": "1468R5CZVoRyjkaqGKHMfs5vFKRSJQePjr",
+  "current_balance_btc": "0.00598004"
+}, {
+  "address": "1JtBaJPAWbvDoWCS39hoDMyesKnd6PSebP",
+  "current_balance_btc": "0.00584229"
+}, {
+  "address": "17izyXdTPiN2ttSW6R96sEKMkvEEpfiCW",
+  "current_balance_btc": "0.00574286"
+}, {
+  "address": "145az1dE6v9FyRbs5rtVjaumn6CGbthbsU",
+  "current_balance_btc": "0.00559139"
+}, {
+  "address": "1GC7ngEVw8NGUTZEGvcJ1vvCPynBPkyT2o",
+  "current_balance_btc": "0.005"
+}, {
+  "address": "16wWbQrspbRktX1CnSkqPXLtyQZVMJxGzU",
+  "current_balance_btc": "0.0047596"
+}, {
+  "address": "1KT6J18sPbXgHzhUYpENXdBaWT1SSh3HUJ",
+  "current_balance_btc": "0.00468245"
+}, {
+  "address": "1MicDnKe1RBh84NAknWsAtgLTvV3QTbDdq",
+  "current_balance_btc": "0.00462945"
+}, {
+  "address": "1DqJzFMx8peFwMN1aPVd5giA9DXPexWLTh",
+  "current_balance_btc": "0.00458598"
+}, {
+  "address": "1Q8NWSvZ7gJGoswubu56B7Q18Htssqre6q",
+  "current_balance_btc": "0.00442508"
+}, {
+  "address": "17CW5ne6akSx6dugNmrJUuxDkMoimfCcAz",
+  "current_balance_btc": "0.00440359"
+}, {
+  "address": "1Na81MDUDV1TFx4zPw4L7sDsf2bkh4Kfds",
+  "current_balance_btc": "0.00439854"
+}, {
+  "address": "16oz8ZsKuxJVgZSPWbqysu8uhPWRmh1Rjn",
+  "current_balance_btc": "0.00436863"
+}, {
+  "address": "1FStrfwHhrsCXHUc3xnY758AE5uCvLFs28",
+  "current_balance_btc": "0.00434886"
+}, {
+  "address": "1MDcXnCJRSqiBmiARfhnAtEuJm4sVDmS6J",
+  "current_balance_btc": "0.00424118"
+}, {
+  "address": "1UPLchXmhP2tZifL3y32eb2VDUTW9DLkS",
+  "current_balance_btc": "0.00401354"
+}, {
+  "address": "1G8UTDc9hoW8pEroY3qtEHGx5FajVi7JYi",
+  "current_balance_btc": "0.00400083"
+}, {
+  "address": "16ZXPmAvsKWic8Be5rahWUYWtNxg9TrhZM",
+  "current_balance_btc": "0.00393989"
+}, {
+  "address": "12n4VtucmfqMVkckxhEnDcDCybTkkxq1fd",
+  "current_balance_btc": "0.00382155"
+}, {
+  "address": "18GVpWvXJiK97TwAZV8QUvqA6iYfyAxs1s",
+  "current_balance_btc": "0.00371004"
+}, {
+  "address": "1AdCpSAj1xV9R5vLjmaqFuSZHEsqV77nds",
+  "current_balance_btc": "0.00368896"
+}, {
+  "address": "1Ar5KrWJX3GpvkqdgcGq22M9r7gXABFeY2",
+  "current_balance_btc": "0.003657"
+}, {
+  "address": "1A9CQkqQ9BPKhujrMxkticVU31717BJ8Gv",
+  "current_balance_btc": "0.00364364"
+}, {
+  "address": "15MnUFEScXGu8TjLUxjdxD2TQph29U8Uop",
+  "current_balance_btc": "0.00356383"
+}, {
+  "address": "1GEGrF5xnHTcDBTnCC6uStBNUpChbpCp3g",
+  "current_balance_btc": "0.00349715"
+}, {
+  "address": "1P4UfBNCbxVBzV75cyNpEgQH54BgaggM9e",
+  "current_balance_btc": "0.00341718"
+}, {
+  "address": "18ijjEVUmQcyiW8i1YF3zFdRS4HCtQdrrT",
+  "current_balance_btc": "0.00338378"
+}, {
+  "address": "14pmyhjxfwXVN384swtq6A2jKP43G5Gqsw",
+  "current_balance_btc": "0.00329395"
+}, {
+  "address": "1MDohA9WrsuGcS7JF4DavXPv3HqpKPHwd",
+  "current_balance_btc": "0.00323761"
+}, {
+  "address": "19nU9VELHsxF6EQv4qrQWESMMX9z3NKMRj",
+  "current_balance_btc": "0.00320563"
+}, {
+  "address": "1NFLBdWNdh8abVwTAMkXb2bCogzojrUyJs",
+  "current_balance_btc": "0.00315182"
+}, {
+  "address": "1FtouFAAC21DH4AKWh3o6yEM6MAUCPkP3u",
+  "current_balance_btc": "0.00307623"
+}, {
+  "address": "1Nm8xtAWSEWbVS66kpJ732wSaKwZwTze3U",
+  "current_balance_btc": "0.00301755"
+}, {
+  "address": "1GPJteqitceVBBnpfGLMi2jQcrtB1ZYf2i",
+  "current_balance_btc": "0.00300883"
+}, {
+  "address": "1EUAqVrQKx7Ux9UgszeZ7vYkDGnSdbdKBf",
+  "current_balance_btc": "0.00294456"
+}, {
+  "address": "1f4jZ8YzEhFdDK2zsse2CZyz4bMQHSVWs",
+  "current_balance_btc": "0.00293358"
+}, {
+  "address": "1HQkvrTbnxxymZ3T4zwFN9GHuSw86YECjM",
+  "current_balance_btc": "0.0029087"
+}, {
+  "address": "16d1jU7q34dd1qC7won6dsmxDhn1H5YN5Y",
+  "current_balance_btc": "0.00290394"
+}, {
+  "address": "14GauCDvQ9xdnnhpeBYAn72JHndFBi1X2K",
+  "current_balance_btc": "0.00290262"
+}, {
+  "address": "1Ai4zJnY6EZAKCgxJVf5q4Lqkei18gdNn5",
+  "current_balance_btc": "0.0029"
+}, {
+  "address": "1L9RU7GfYVPb2CDYbnJv3D1b1fAdzpDzt3",
+  "current_balance_btc": "0.00289144"
+}, {
+  "address": "1HUdTbjSTxpnNQ5R8U19U2sMfdWQohujBG",
+  "current_balance_btc": "0.00281541"
+}, {
+  "address": "1KC73eMSGZh4auVZSRNsEaad4NrrqNaBiq",
+  "current_balance_btc": "0.00273517"
+}, {
+  "address": "1KtHp3mYi7VrCDwZ7MQn9P3DHnErWbbe4N",
+  "current_balance_btc": "0.00272242"
+}, {
+  "address": "1NjphNy2WD8hMj2LbWuboe6kdfu2mXNDE8",
+  "current_balance_btc": "0.00270871"
+}, {
+  "address": "1JLNciVqFTYYqmkpXqGGqfwDsEUSqvkjou",
+  "current_balance_btc": "0.00269691"
+}, {
+  "address": "1KgjLk7WbhFdwKKbcZPH4EyorMxJ3CMskW",
+  "current_balance_btc": "0.00260051"
+}, {
+  "address": "1GWYLQt4LYqPLj5acoCMa896zSL6mZuYxH",
+  "current_balance_btc": "0.00252796"
+}, {
+  "address": "1BVyJYJxAyZ62SsZDcYN1791XJ1UMb4oKP",
+  "current_balance_btc": "0.00250484"
+}, {
+  "address": "14Zs51iqHo7LKxJKU2AaBhKMv9mM6eXDk2",
+  "current_balance_btc": "0.00250211"
+}, {
+  "address": "1D3RLHLEtAyUwXyLGpq2QwiYXkfU6rDsNt",
+  "current_balance_btc": "0.0025"
+}, {
+  "address": "1DfYT3B1GJdYWCiLaESAT3v7yq2kgYdguQ",
+  "current_balance_btc": "0.00249146"
+}, {
+  "address": "19PiNigqJPvcRfrdQRUAiVkyKZiXwEboS7",
+  "current_balance_btc": "0.00245736"
+}, {
+  "address": "1LmoGQEpoq4uNHApnVFF8bXdK1wxRxEDUW",
+  "current_balance_btc": "0.00245102"
+}, {
+  "address": "17gSofdrwFrAjCZVtqKvKRWaxUuJqYCKXu",
+  "current_balance_btc": "0.00244048"
+}, {
+  "address": "1Msto5Y3XoPvbmCncFxSKiUQ39Me3JvtZZ",
+  "current_balance_btc": "0.00241147"
+}, {
+  "address": "19DnnPcEhqtTRcJFbxDqgvn6bmp7UUgaRb",
+  "current_balance_btc": "0.002362"
+}, {
+  "address": "1Eq5nQDL4AoMxFwJ4fKQfujDvwFqURwaCP",
+  "current_balance_btc": "0.00235148"
+}, {
+  "address": "12MMLkDcAADcegcTbn3MNN1R9oNY7o3zWL",
+  "current_balance_btc": "0.00235035"
+}, {
+  "address": "1Brg2PnVCPocciQRJCQ4mZuo9UQ9M2kbdt",
+  "current_balance_btc": "0.0023494"
+}, {
+  "address": "12aM1vGyEAqS4ha4Tn6UwZN5MS7tCwPLqP",
+  "current_balance_btc": "0.00233408"
+}, {
+  "address": "1CVQLwTVo2TQcPQh4FiDS97zZGznG8KUzP",
+  "current_balance_btc": "0.00229325"
+}, {
+  "address": "18t32sdD53BPtvua5JJ1PZxd4Jui9VDX19",
+  "current_balance_btc": "0.00229008"
+}, {
+  "address": "1FABWKF8fR87R6u64bPsbA4bMLSa2riXTD",
+  "current_balance_btc": "0.00227076"
+}, {
+  "address": "1MBEVEXvo9ZiZHCUuiFxjQy9KH8fk6rLSP",
+  "current_balance_btc": "0.00226787"
+}, {
+  "address": "1GtCZBXtcSZ7BpzCj5rXfpHxmivmQfWKnh",
+  "current_balance_btc": "0.00226768"
+}, {
+  "address": "1PKKGSehk1EDeCrQbfDwZbzgjyc5q1Xcez",
+  "current_balance_btc": "0.00226546"
+}, {
+  "address": "1DByp8WtcWV2hvS5mKBY3AYRH9MRRnQn3Q",
+  "current_balance_btc": "0.00211294"
+}, {
+  "address": "1H9Se5c4cEDCjq4Pa3pJZ7ysBHoPASu1qq",
+  "current_balance_btc": "0.00210673"
+}, {
+  "address": "1MrnZKPwoWvL3HRTAGwydAmgwqVrBBNb91",
+  "current_balance_btc": "0.0020799"
+}, {
+  "address": "14P4E92adhqvP2FSE64TBqtwHcZU8gNTLk",
+  "current_balance_btc": "0.00204195"
+}, {
+  "address": "1JJQkKWRjGYgWx9tXHfS9iU3Q6BXVZAG9J",
+  "current_balance_btc": "0.00203571"
+}, {
+  "address": "17kmg6bprDzVuShARMi2JwBQh1vxSxxsBX",
+  "current_balance_btc": "0.00195652"
+}, {
+  "address": "1EKYS5UCtZMpE3YneM1KN2GNSwu5tLwDhd",
+  "current_balance_btc": "0.001956"
+}, {
+  "address": "15CpxYN1kzVH29YgYsERQkpDT9JqVDqCQc",
+  "current_balance_btc": "0.00193"
+}, {
+  "address": "17BG8NFHamQgZBoYA5xP4PyXkVu9iGcFU6",
+  "current_balance_btc": "0.00185712"
+}, {
+  "address": "1btMhNFDUQwy5fYU5Qz4GktgTBQtEJJTX",
+  "current_balance_btc": "0.00181023"
+}, {
+  "address": "15XrzTdpNzbfYnMBVTfKUDRfFkhTygFGy5",
+  "current_balance_btc": "0.0018036"
+}, {
+  "address": "1NM6SL2W4K8Bfk1JhQJWWER4DJsL9aoLNv",
+  "current_balance_btc": "0.00178025"
+}, {
+  "address": "1C4EjdQfhnFnUZMNPEfPkxEKa9Ywz34snV",
+  "current_balance_btc": "0.0017686"
+}, {
+  "address": "1NMBrdgFaUGZw2ZAsryT5neuwbBwgC1jFk",
+  "current_balance_btc": "0.0017533"
+}, {
+  "address": "159yedWATJUr9r4NGe2A8Zw87rCzbGwNFV",
+  "current_balance_btc": "0.00174745"
+}, {
+  "address": "1HUbhZM3cbQ6eidYzPyx1o3KNthRj2Tp3q",
+  "current_balance_btc": "0.00170839"
+}, {
+  "address": "15hrEGgG7mhbebS1LbpBCbozDESqw6VQxD",
+  "current_balance_btc": "0.00169408"
+}, {
+  "address": "1A7Mv64EtPCfC7sP5m6CHYNYsFBzEYqAop",
+  "current_balance_btc": "0.00167191"
+}, {
+  "address": "1B3ny2m7cYXryNnzUovCGWZUi4Mbsxnz8c",
+  "current_balance_btc": "0.00163331"
+}, {
+  "address": "19Z4e71pAsoTAoCQxM9SQ5kgfLmzwiwfaV",
+  "current_balance_btc": "0.00159083"
+}, {
+  "address": "15bLsLjzP1Q4Rfc9eM2FGe19sHxM7JWimd",
+  "current_balance_btc": "0.00157122"
+}, {
+  "address": "19ibCxxHf9o3fyCQdBgtrnVg5s6UnG5R2i",
+  "current_balance_btc": "0.00157"
+}, {
+  "address": "1P4F4xjqJUGaYdkFHsV1hdiBu6kpjKECwL",
+  "current_balance_btc": "0.00155921"
+}, {
+  "address": "12amMYeAeg9iGMFp5QybnXdfvfrqDWtcNa",
+  "current_balance_btc": "0.00154759"
+}, {
+  "address": "18urfByncz53uzBNVYEMbyMvCwhjrnbzcT",
+  "current_balance_btc": "0.00151743"
+}, {
+  "address": "1LH5ZPMmf16QEtkNwMJijGnShC6rpWL1Bu",
+  "current_balance_btc": "0.00149795"
+}, {
+  "address": "18ySPuYG9G5R3m3fxWuyoXZsMpA2MgBwVg",
+  "current_balance_btc": "0.00148318"
+}, {
+  "address": "1KuAdiTUZJ3DuwxQKH8F3VZ8yJEixi6hwC",
+  "current_balance_btc": "0.00143701"
+}, {
+  "address": "1JjAtLuR8qV1yhLfHZYHHtepWLPP56cfz3",
+  "current_balance_btc": "0.00143697"
+}, {
+  "address": "1GxN3pN8KxtLo37AWM6grPgH7hnMgWL43G",
+  "current_balance_btc": "0.00138409"
+}, {
+  "address": "19oUs8hz8Ensy6gA9b3HyQSnYVp3kddLa6",
+  "current_balance_btc": "0.00137517"
+}, {
+  "address": "1AVsS5MrYapAffepWxreRYM7WrgacNkLGf",
+  "current_balance_btc": "0.00137501"
+}, {
+  "address": "191Q7WFZA5F2HtTqajFuMxzagPqkkvZrV7",
+  "current_balance_btc": "0.00136698"
+}, {
+  "address": "1C643WVFEV6pMcurJHpm2yxmUCXXcx3ctt",
+  "current_balance_btc": "0.0013498"
+}, {
+  "address": "1Kf6oREDWPGLkkiVjr2FXcLBZ3H4HC3hD4",
+  "current_balance_btc": "0.00128704"
+}, {
+  "address": "1ALyb78cbFA65A5fyX8AdYhhL1B65ioxES",
+  "current_balance_btc": "0.00124666"
+}, {
+  "address": "1HVBC6PnHPm1qxV11B5pJRCifKzJc2h2K5",
+  "current_balance_btc": "0.00124613"
+}, {
+  "address": "1MJpy8cjGDmZHCpbamfPsj8FJkZWkt3Aki",
+  "current_balance_btc": "0.0012436"
+}, {
+  "address": "17QLsfyYYgHUDSDTdJX4qUNLkPGqfPpTQZ",
+  "current_balance_btc": "0.00123838"
+}, {
+  "address": "1441iAfTgGq7iJUZCG46P3PQgf4qgci1qg",
+  "current_balance_btc": "0.00118974"
+}, {
+  "address": "18pUFkFozFQPFemunQppaNqnc7jPPoCRNZ",
+  "current_balance_btc": "0.00118147"
+}, {
+  "address": "17fsXZJ7shCsrb4fY183QrsmYNsHNJb2bu",
+  "current_balance_btc": "0.00115282"
+}, {
+  "address": "1Cf9PdUennw8qxd2cSxcASyuE1cEkCvi3",
+  "current_balance_btc": "0.00115122"
+}, {
+  "address": "1GTY2QcPThAndH9bWr99k7apyqY97kwpb",
+  "current_balance_btc": "0.00114135"
+}, {
+  "address": "16HrthiadD6NBRurFSv5ogzhGq35pBVfou",
+  "current_balance_btc": "0.00111926"
+}, {
+  "address": "17GsVM696Q6Eojw73Mk13GsvtoGsZYPXNP",
+  "current_balance_btc": "0.00110274"
+}, {
+  "address": "1LszgVKjCpVuAuREmimToSfAoiz2a188PV",
+  "current_balance_btc": "0.00109582"
+}, {
+  "address": "17PYV64yDQ5tXwPbNUsXUgi9t8TM4R9NtB",
+  "current_balance_btc": "0.00109226"
+}, {
+  "address": "1ERgW3CDup6NXQCAeW5fNik8fmSjnkbryK",
+  "current_balance_btc": "0.00108331"
+}, {
+  "address": "1CRunA3vGfwbJEJRJQ9WEfTT737CggiGNL",
+  "current_balance_btc": "0.00108"
+}, {
+  "address": "1MEnof2FHUrr4WqwhkPytmJwKUeSX1792A",
+  "current_balance_btc": "0.00104769"
+}, {
+  "address": "1G5ZmZekitZk5E5rzK8AgjHQXE73ocGmFJ",
+  "current_balance_btc": "0.00102053"
+}, {
+  "address": "1AjZPMsnmpdK2Rv9KQNfMurTXinscVro9V",
+  "current_balance_btc": "0.00101835"
+}, {
+  "address": "15kFhgysxkhx8jg9iXR9hEvaPsYHmDLycA",
+  "current_balance_btc": "0.00101578"
+}, {
+  "address": "1Foe5QRPxxDW6SabcmBqN4hiEW6sjnz2uS",
+  "current_balance_btc": "0.00100746"
+}, {
+  "address": "1sTFqJunYs7ckExGAceFTa6JmfPgLotX2",
+  "current_balance_btc": "0.001"
+}, {
+  "address": "16pvgBj2ksShH9zogUnKzbK5sEurnfYGA2",
+  "current_balance_btc": "0.00099484"
+}, {
+  "address": "14acJQN6NsMqJTojQD3QPxruwmMhkdPfTn",
+  "current_balance_btc": "0.00099309"
+}, {
+  "address": "1QBuVn42ZVbaKXJxd5e1VDKB4wzPmqYQSx",
+  "current_balance_btc": "0.00098746"
+}, {
+  "address": "1LfiRfrhuFNFABmUDLd7qpCsPqFD6qiyT3",
+  "current_balance_btc": "0.00098697"
+}, {
+  "address": "12oSWcT43s7toMrf4UYG7tQ3bAnsYUhEKS",
+  "current_balance_btc": "0.00097988"
+}, {
+  "address": "17z9DKQW5yWBACkEQPjr56gkm1MBfB7S13",
+  "current_balance_btc": "0.00097874"
+}, {
+  "address": "1GjLLHV1Q9xtHzCfaiHDNSdW4vZRMnBcSt",
+  "current_balance_btc": "0.0009776"
+}, {
+  "address": "1L6Xzog5krZ4KZF344NvGZMRpx2bND7ogE",
+  "current_balance_btc": "0.00097214"
+}, {
+  "address": "1KjzXnYxuiY6pgyaWPuXq5qPj16sB1Wf2z",
+  "current_balance_btc": "0.0009667"
+}, {
+  "address": "1JAURjs5obKhfhDVsUWHtcDpLufC6JXckf",
+  "current_balance_btc": "0.0009634"
+}, {
+  "address": "1Lhg6b91NzNUM4dSmXRhPsHybZW59Fh5D5",
+  "current_balance_btc": "0.00095028"
+}, {
+  "address": "1QEktpweFCGUgBhU5UxSZPY7CKSHP8uhaJ",
+  "current_balance_btc": "0.0009401"
+}, {
+  "address": "1HqrhBvEvqM1Thwjp584CaVS3qbTC9tZbv",
+  "current_balance_btc": "0.00093672"
+}, {
+  "address": "1K8pGXBKfWbY6mRT3HvwEiEQ28ftio6CzB",
+  "current_balance_btc": "0.00093613"
+}, {
+  "address": "1JUfPhZbw5PHxjMrwcaRkJ51i2L8XrQgf8",
+  "current_balance_btc": "0.00092709"
+}, {
+  "address": "1EfN9BAV1B141mxLdqDxqCrTGHU4LJou4j",
+  "current_balance_btc": "0.00092276"
+}, {
+  "address": "1Bu8UKe7cLonVmBLwCDRUAqTjNGsEB96N8",
+  "current_balance_btc": "0.00092112"
+}, {
+  "address": "1CvXXbWd4oJPXVexxUJzVgc4GhJufGAAYB",
+  "current_balance_btc": "0.00091703"
+}, {
+  "address": "1HHdY2Lcv5L4aBWYfXNw9zWQLx1tGUc7ea",
+  "current_balance_btc": "0.00090101"
+}, {
+  "address": "12YC5ksBT4b74iE76xCD719hBusvw88dV4",
+  "current_balance_btc": "0.0009"
+}, {
+  "address": "1FKzYWbua73VXQaAbJb3EbAJBTjvnDYpGg",
+  "current_balance_btc": "0.000894"
+}, {
+  "address": "17AHTykv3wfi2tGksJqYTswvDZGe5s1j6X",
+  "current_balance_btc": "0.00087852"
+}, {
+  "address": "16jFfLmXTC6kH3zLqV6GfFXy3VRFnMMfna",
+  "current_balance_btc": "0.00087648"
+}, {
+  "address": "1KnpghqgfGLfde5xWcHnxp9RGEgU6BvhBt",
+  "current_balance_btc": "0.00086994"
+}, {
+  "address": "1F5HkMQbMp8bSfdajwGsD1PdCppwcUaRVw",
+  "current_balance_btc": "0.00081753"
+}, {
+  "address": "1CUH7wXCrEoKpzDbBju2EqaJ5Gu2o59LBj",
+  "current_balance_btc": "0.0008"
+}, {
+  "address": "1BzPwD3f9V5woyL3PAJfRt2jxsGLiSA29P",
+  "current_balance_btc": "0.0008"
+}, {
+  "address": "1L2Lx67ZwpEPuzyNURiVxUAxeVQLsE67En",
+  "current_balance_btc": "0.0008"
+}, {
+  "address": "112EfybTk5Dv5xyEHjEEy2K6TwSunUWRXr",
+  "current_balance_btc": "0.00079721"
+}, {
+  "address": "1AX4NRUQBXRyu5vxpXpRc3JL2h4VAMkrHq",
+  "current_balance_btc": "0.00079474"
+}, {
+  "address": "15MN7QWBkC78W83CjQ8dCYqgbWLTfUEEY9",
+  "current_balance_btc": "0.0007839"
+}, {
+  "address": "1JX8WTAVo7yG86jrUjrAmJVntvRmkHaEdf",
+  "current_balance_btc": "0.00077828"
+}, {
+  "address": "1NM21XHuiYHBja4hvQnZdAdShB61fsNi4d",
+  "current_balance_btc": "0.00076931"
+}, {
+  "address": "1Bb7myexSLrNKNv6MHFhKeqF86G61M5ioT",
+  "current_balance_btc": "0.000749"
+}, {
+  "address": "1HU3fDRwn66pkP6ZhPaT34wkYyQrE8doDr",
+  "current_balance_btc": "0.00074583"
+}, {
+  "address": "1FaCW13nfVhzGiJBRjyxH6B6k8BwEW9xif",
+  "current_balance_btc": "0.00074005"
+}, {
+  "address": "15C4T2tJmwp9CmnwmPauTG92FdnuNCvPMN",
+  "current_balance_btc": "0.00073"
+}, {
+  "address": "1AHfWXdCMj8pv8BQvLC2WNpJjHaUa5SrKs",
+  "current_balance_btc": "0.00072693"
+}, {
+  "address": "1CE8bBr1dYZRMnpmyYsFEoexa1YoPz2mfB",
+  "current_balance_btc": "0.00072289"
+}, {
+  "address": "19U58z27AFHPn5DswgJJqAqwMqjioMakTy",
+  "current_balance_btc": "0.00072199"
+}, {
+  "address": "1DeNJXG36gijjo46TjctMhqLJeVEg2oDwN",
+  "current_balance_btc": "0.00071724"
+}, {
+  "address": "18jYnipNTT5knDXuLqgm8KhbbzQr36FVtf",
+  "current_balance_btc": "0.0007"
+}, {
+  "address": "1LANgBRNb9w5nij1LSBEAe2qVcyuqvQQL",
+  "current_balance_btc": "0.00069918"
+}, {
+  "address": "174pa1JHFtmWgwYi5rFDcAjJWkpi2USdgi",
+  "current_balance_btc": "0.00069707"
+}, {
+  "address": "1K5Wzr3HRxvtHfhqRfPv7WRDt6CRpHmGjc",
+  "current_balance_btc": "0.00065797"
+}, {
+  "address": "183NkvRQ4dgMd7DkQ3Nshb6NAneiyHzYuZ",
+  "current_balance_btc": "0.00064907"
+}, {
+  "address": "17AquUTywVCrMUSz5T7tyU5pKFZXmNqa1i",
+  "current_balance_btc": "0.0006406"
+}, {
+  "address": "1Edn21rrVpqQpozpvMwDxKZk2QXfeoey5s",
+  "current_balance_btc": "0.0006362"
+}, {
+  "address": "17teMasUvhbXkyankDF5GdooMQJh8zajD6",
+  "current_balance_btc": "0.00062778"
+}, {
+  "address": "1JoP8wHF9zNyvduKJxqytZEjWWFcD1Hiiy",
+  "current_balance_btc": "0.00062"
+}, {
+  "address": "1NgMVowPpvbFWK8EKTd4Aw1AakEb4JXnAx",
+  "current_balance_btc": "0.00061857"
+}, {
+  "address": "1DHW4z5BDz9Qnr7jpoQNstGufCMQGQymCJ",
+  "current_balance_btc": "0.00060086"
+}, {
+  "address": "1A61Yjtb18VxMD9ZqBV7N1pYahiaQ6vLYo",
+  "current_balance_btc": "0.0006"
+}, {
+  "address": "1DyaEvjeXTNy8tGmfNX6Ky514w5urXKm5V",
+  "current_balance_btc": "0.00059001"
+}, {
+  "address": "1PCMDiBjUY3nNuXNK6MSkkFSsKmfMn4YEt",
+  "current_balance_btc": "0.00058907"
+}, {
+  "address": "1JHif33UQGNkApimhtXaxvNJvwaULLZT1v",
+  "current_balance_btc": "0.00058529"
+}, {
+  "address": "1PHBArseewXAxWCjHb7yoUhJhtjC4Qn85u",
+  "current_balance_btc": "0.00055415"
+}, {
+  "address": "1L9ZCEt4s23DdnZUz9QdEWaeLn9P8VokSX",
+  "current_balance_btc": "0.00055138"
+}, {
+  "address": "19JL2t9qLVwVaMGij4a1FGenCtGbdSQvCN",
+  "current_balance_btc": "0.00054061"
+}, {
+  "address": "1KJ2ZQvwWUMZpaxbpBB6KDBPAQny7tTyxd",
+  "current_balance_btc": "0.00052241"
+}, {
+  "address": "19FVmo9HvahRzj9Lxnsf4aHWYWMwwbJFRB",
+  "current_balance_btc": "0.00052189"
+}, {
+  "address": "1DiQa6TLumLkw8LA1YCokYHjbt57KcnrXh",
+  "current_balance_btc": "0.00051993"
+}, {
+  "address": "1HHL4WMDygJRb6nktG4kUe1P98PqbSF9Rc",
+  "current_balance_btc": "0.0005167"
+}, {
+  "address": "174PVD31dMejaFAaxvyd4wqnhXp1RzeXs8",
+  "current_balance_btc": "0.00050477"
+}, {
+  "address": "1PvUsqWzbJwGhNK1ywcN9cNv3RXfdyMHEJ",
+  "current_balance_btc": "0.0005"
+}, {
+  "address": "1JKTs3KbjWusP5PH69XWXSqgKVrtpfEfRr",
+  "current_balance_btc": "0.0005"
+}, {
+  "address": "1MMPz8pFnUfpKv5cL1BikKSjPqPDLPM9Bd",
+  "current_balance_btc": "0.00049817"
+}, {
+  "address": "1GLhT5evfnmJGTToNhMbwwTiaYhHqWyvES",
+  "current_balance_btc": "0.00049114"
+}, {
+  "address": "15MKzjyJAqJF7tZLKhiF6hTwZ5NuRdFxnV",
+  "current_balance_btc": "0.0004852"
+}, {
+  "address": "13zLM1Ub7FFhKGafm8rTK7VJ2NfHKqPG1c",
+  "current_balance_btc": "0.00047912"
+}, {
+  "address": "195LomSZ7trWAhDJM4CdJ3Lkt6o95DdtoY",
+  "current_balance_btc": "0.00047376"
+}, {
+  "address": "15DpHp4mmWPFWy5j391QuYvNNKNqgxjt7k",
+  "current_balance_btc": "0.00047318"
+}, {
+  "address": "1Fd4fxxbSqYnJ3TDHfc8MxPhZEUTWiamJK",
+  "current_balance_btc": "0.000468"
+}, {
+  "address": "19a8f8uynzNFdPmD1xsSGsfdC1EuRmLPA5",
+  "current_balance_btc": "0.00046478"
+}, {
+  "address": "1vfRwUGeKqdayk7QsyXPC8pY3C97X4KdJ",
+  "current_balance_btc": "0.00046278"
+}, {
+  "address": "14bGuqcj8LB4ALUHjqiUQWRUXiCNEYE4if",
+  "current_balance_btc": "0.00046197"
+}, {
+  "address": "1Ks5aLkREyVUba3QiS64ZL5PPdcgXDXhBp",
+  "current_balance_btc": "0.00045656"
+}, {
+  "address": "127aQMEfrtCCuYdnnTaMDum4dd52TmJ6t7",
+  "current_balance_btc": "0.0004552"
+}, {
+  "address": "1N6js8byM8njn1GGF75qfNQjQhRMZpGPB8",
+  "current_balance_btc": "0.00044888"
+}, {
+  "address": "1PbpLSc7iyoLQ9n76jgxsKqWefmLjiQxPt",
+  "current_balance_btc": "0.00044291"
+}, {
+  "address": "1982KP8e3ijbPZioFpnYD2Zru35P4uWLqx",
+  "current_balance_btc": "0.00042974"
+}, {
+  "address": "1KqJ7j72SZShyH9GJpXvJgsK6XtzTyN1T2",
+  "current_balance_btc": "0.00042906"
+}, {
+  "address": "1ESakAGqfTSEmo7vZmnmQXGiy2TBZxBEEH",
+  "current_balance_btc": "0.00042838"
+}, {
+  "address": "1ASBoH7iM5SQwu7BYq2fc76bNc26hMNkwM",
+  "current_balance_btc": "0.000423"
+}, {
+  "address": "166ps4RGSecSVuMrCRzzxxVL2nYZzGYzMV",
+  "current_balance_btc": "0.00041564"
+}, {
+  "address": "38wQLiygq1fa99gmKHDNYtQhraEvNSyowt",
+  "current_balance_btc": "0.00040525"
+}, {
+  "address": "1GLiqA6BMMG9Eh57AWVSXdGBwLrDXPHHek",
+  "current_balance_btc": "0.00039426"
+}, {
+  "address": "1BKjet5vXMqpTbiduhHjtgAMB1tGTqNQVK",
+  "current_balance_btc": "0.00039218"
+}, {
+  "address": "1FMrhVFSydD1CjmSM9Jn3YA4bqZN3K8q9S",
+  "current_balance_btc": "0.00038567"
+}, {
+  "address": "1MJJHZQhgecfU77m5xj6zTqRPYiQsqZ4uU",
+  "current_balance_btc": "0.00038452"
+}, {
+  "address": "123TZ4iavAhmkKea8aTXHxpbRAciSS4jus",
+  "current_balance_btc": "0.00038291"
+}, {
+  "address": "17NmLjRKcTLbpz3xBX8icjmwHQ3XZVJAAa",
+  "current_balance_btc": "0.00036707"
+}, {
+  "address": "1519pMszTwnPKwsxowUF6AEWBBGyNAp3ke",
+  "current_balance_btc": "0.00036603"
+}, {
+  "address": "16X6UDz6dMkVAAkWdY6HKe85o6EVAbzDtn",
+  "current_balance_btc": "0.00036478"
+}, {
+  "address": "1CapDyroBj1XTWAzke8BXZXKBdocUqBybi",
+  "current_balance_btc": "0.00035788"
+}, {
+  "address": "12NKzQUovrFMihLWuHibJebnbBHzRLLwEB",
+  "current_balance_btc": "0.00035452"
+}, {
+  "address": "195bKPTeFVJziP6TejZLUmsdXoY1i6ne6U",
+  "current_balance_btc": "0.00035401"
+}, {
+  "address": "15aLQetaineW7AyutxQL4vz8SJUoQACcQn",
+  "current_balance_btc": "0.00035097"
+}, {
+  "address": "174KyvWrLkEfMLgB3BA7314WztJ7BVS69R",
+  "current_balance_btc": "0.00034838"
+}, {
+  "address": "1J1E6gncBxzBDL7sTUtE5cn9o6DkW5PLkS",
+  "current_balance_btc": "0.00034451"
+}, {
+  "address": "1HzEDPJUnn2wsc7HL3NeCVVKkepLeGkW9F",
+  "current_balance_btc": "0.0003426"
+}, {
+  "address": "1G62XYhcx1HG8DN17FMR949LiQ9yPpCPyw",
+  "current_balance_btc": "0.00033581"
+}, {
+  "address": "13L9sg68DLbeMqQS1dEPAtjN8xKyAS7QjY",
+  "current_balance_btc": "0.00032902"
+}, {
+  "address": "18dR9hkMxUAtAEzbmt8qt2ykxmCzoiS8xg",
+  "current_balance_btc": "0.00032793"
+}, {
+  "address": "1BiFPjrkuT2d59qV3vyeeV6SAhwAd2M52Y",
+  "current_balance_btc": "0.0003191"
+}, {
+  "address": "17DXsSSUJLomY2AZNoK3wUWnP4Yd87HVyZ",
+  "current_balance_btc": "0.00031789"
+}, {
+  "address": "1EUPPeRHucZTXoNWD1yXwZjRpM5kjP3sxM",
+  "current_balance_btc": "0.00031511"
+}, {
+  "address": "1LwLDPFQ5bXXBkKkdQ4VzUtWZ5DNo2MPPw",
+  "current_balance_btc": "0.000312"
+}, {
+  "address": "1HkYHS8xUZfnykrwcViMxoJLyAo7MiU19v",
+  "current_balance_btc": "0.000309"
+}, {
+  "address": "1NfNd5WA7TswDcyjKtEh4BwBzw4wWBWtpd",
+  "current_balance_btc": "0.00030725"
+}, {
+  "address": "1BGqX3xewSWw4p4RwsXM6HpURLVc8DutHx",
+  "current_balance_btc": "0.00030005"
+}, {
+  "address": "1HsdPcfYJyX3QfpnRLW7zFyztaGQ7dMZwH",
+  "current_balance_btc": "0.00029921"
+}, {
+  "address": "1ECMAMjDtK61iXDbBEGAm6SLvCdQfmGhWS",
+  "current_balance_btc": "0.00029017"
+}, {
+  "address": "16VCxkZiXfr4nwVZePWQ9r4a7VJgGPwmRv",
+  "current_balance_btc": "0.00028859"
+}, {
+  "address": "1AnLLUhHQJ1Xx6eENrdWUY8VRSUPRL8qYK",
+  "current_balance_btc": "0.00028808"
+}, {
+  "address": "1Gf58huwa3ZX6eE7QmSFuuKF6bqh1y3kZq",
+  "current_balance_btc": "0.000288"
+}, {
+  "address": "1BankHpn6WBVQXufMWbqTPWqF82bVNZy4V",
+  "current_balance_btc": "0.00028559"
+}, {
+  "address": "15VoQpswfuz9taJbDN7sGLD2Bt7ke97J5o",
+  "current_balance_btc": "0.00028534"
+}, {
+  "address": "18AHLzqQ5tngaZeWGp72yyrCDmZAb6AWtk",
+  "current_balance_btc": "0.00028385"
+}, {
+  "address": "13Rbb4PR7iGo21TBMm26jfwWmvPLu7SddA",
+  "current_balance_btc": "0.00028003"
+}, {
+  "address": "1L4qnnXhEonUHa6SnGWP7s5MFncnNknLzi",
+  "current_balance_btc": "0.00027877"
+}, {
+  "address": "1KuAiMYvuznPAY29rPB5GTkLiXb9kyLaTR",
+  "current_balance_btc": "0.00027427"
+}, {
+  "address": "1Nx8AM7nBkrnkrvPnp6Yqn9RKT6dGekuqd",
+  "current_balance_btc": "0.00027238"
+}, {
+  "address": "1HtENKZShYZNxjnxNvS15HrpkvFq9CjsFf",
+  "current_balance_btc": "0.00026708"
+}, {
+  "address": "1AgeLQMAT8BRLzz1ZALj4UkWp4bNgHCBcE",
+  "current_balance_btc": "0.00026599"
+}, {
+  "address": "12v1BHf8brvd8QMaScTovJ8AkYxs1Nx6Uo",
+  "current_balance_btc": "0.00026418"
+}, {
+  "address": "1GANf2h3bxSHSZuCPYQRPk4ad16B5H7zR1",
+  "current_balance_btc": "0.0002625"
+}, {
+  "address": "18WYTqVaAfQuLki51YCGA73hWfA2dafYKU",
+  "current_balance_btc": "0.00026072"
+}, {
+  "address": "1Mtz38E25Z2n1b9WBM8RoLjMcQobjVTmW6",
+  "current_balance_btc": "0.00025906"
+}, {
+  "address": "12RfWp2MmraaEAeHhfRX1zMogEU3R6Buh4",
+  "current_balance_btc": "0.0002573"
+}, {
+  "address": "18ZY5dHynSxUBZ8CgmEr3y3oKxcgMhYqxD",
+  "current_balance_btc": "0.00025391"
+}, {
+  "address": "1Mrv1V2hZFvSs3pQY3HgLr5pEfeJSqbxRi",
+  "current_balance_btc": "0.00025138"
+}, {
+  "address": "14dcRbAoJWgRfd2h9of9mh3WCRXEHMdqzS",
+  "current_balance_btc": "0.00024462"
+}, {
+  "address": "1Eb7aptfepGizZgLEBUc3DF9yuzJ3okNUz",
+  "current_balance_btc": "0.000235"
+}, {
+  "address": "1NS2gFaePPQpFX9EUFfEdS6MREe8XSuXjM",
+  "current_balance_btc": "0.00023194"
+}, {
+  "address": "18x5ENnNUk9UTVmXHmTCr1WUv3orszQRMn",
+  "current_balance_btc": "0.00023028"
+}, {
+  "address": "1HrRzt2ghX6cc19Fm61sc9PTEdojYemEte",
+  "current_balance_btc": "0.00023028"
+}, {
+  "address": "12AtRmAuZKYUsv3fYYRhaq2jUXzWsgLqb9",
+  "current_balance_btc": "0.00022413"
+}, {
+  "address": "1GEQLDFyp9So3rVYdnjiDFyuLZEVLfHcJR",
+  "current_balance_btc": "0.00022108"
+}, {
+  "address": "18sc7RmXJAqokLDkAgBRywgRdhF7TAVH2c",
+  "current_balance_btc": "0.00021431"
+}, {
+  "address": "1HwkPHnFk3neyENSPim77BZgpKjJsimFdC",
+  "current_balance_btc": "0.0002108"
+}, {
+  "address": "1FhSqSZoHcqhfENtDEdssvz2qsFMbsrfXW",
+  "current_balance_btc": "0.00020777"
+}, {
+  "address": "1QEn3F4eSrUkCS8way8SsSQFk5CjbN6crj",
+  "current_balance_btc": "0.000205"
+}, {
+  "address": "1CKTLWq8v4o6W184CpuAGBkA7NaKHpL2sZ",
+  "current_balance_btc": "0.00020449"
+}, {
+  "address": "1CvqwPvu9EuWbY3aeyM4jA6m8UACaiYkFM",
+  "current_balance_btc": "0.00020389"
+}, {
+  "address": "1PGsUxb1eh5EJjMFLnTJP9XEwpro9DaEar",
+  "current_balance_btc": "0.00020376"
+}, {
+  "address": "1JNWwA24Myb7s8Weteib6VACAeteMXFU6T",
+  "current_balance_btc": "0.00020102"
+}, {
+  "address": "3MkwFfGNQDve7vz1z6gUDVxkuQpcSV3Mz8",
+  "current_balance_btc": "0.00019977"
+}, {
+  "address": "1K1abJpb2rjsz64Gnn8NNQoYrEQ3uKXx6F",
+  "current_balance_btc": "0.00019922"
+}, {
+  "address": "1kXcc8LB2jm7SztDtsKQRpHdwNm9u48Fd",
+  "current_balance_btc": "0.00019516"
+}, {
+  "address": "1EhnboWfwK2nr5UvpaS8Y3CGmLo8UgM1ub",
+  "current_balance_btc": "0.00019496"
+}, {
+  "address": "162srGQmS7J747HCSWavTGUHfSeLtBrPeQ",
+  "current_balance_btc": "0.0001909"
+}, {
+  "address": "1J9ikqFuwrzPbczsDkquA9uVYeq6dEehsj",
+  "current_balance_btc": "0.00018666"
+}, {
+  "address": "1K3zkh2UVb4cBitv84Kr5fb6U82DyaMnve",
+  "current_balance_btc": "0.00018663"
+}, {
+  "address": "1JGAxZn5HsgMZhW1vRjyWyXHHdGuCCxPgc",
+  "current_balance_btc": "0.00018657"
+}, {
+  "address": "1Kx9uTqQApE6VLnL3G85V5CApESVpsk9Kv",
+  "current_balance_btc": "0.00018513"
+}, {
+  "address": "1AjF18dpZAyLQAkTnGimGiAq5ki72ccStf",
+  "current_balance_btc": "0.00018429"
+}, {
+  "address": "16F1xGZwYRbg5qnApcW3BDPFD5aw8sqMNw",
+  "current_balance_btc": "0.00018078"
+}, {
+  "address": "12wjU7jpgaCeD4bjkZURAhtKhvozqArLkA",
+  "current_balance_btc": "0.00017403"
+}, {
+  "address": "1Lb6tAwRAQFykDD2CMNPMroSqS7RaE7YLu",
+  "current_balance_btc": "0.00017039"
+}, {
+  "address": "1CmKwkiDFEzGSA1LhmoLEJx3XpmpLnTnmi",
+  "current_balance_btc": "0.00016933"
+}, {
+  "address": "1EnjKEfoqN5DAn8bJb6JTqqKjaH3JthW3i",
+  "current_balance_btc": "0.00016928"
+}, {
+  "address": "1F9jCeixNbK6GEkdQFq1ejkbJjAGwVVVqG",
+  "current_balance_btc": "0.00016407"
+}, {
+  "address": "1LHmq4NiU14gJboNnogY73VoUiVKHcvG7b",
+  "current_balance_btc": "0.00016306"
+}, {
+  "address": "1PwTAetQzCuxEmnCHsWr21YyLncG3tLmEq",
+  "current_balance_btc": "0.00016303"
+}, {
+  "address": "1EMgG7wT9LJHsafw3zPvzhrGh1SBtkWdzj",
+  "current_balance_btc": "0.00016155"
+}, {
+  "address": "14x25KZ2JcFLjoUMD916VqhY7SJFzY5RRf",
+  "current_balance_btc": "0.00016023"
+}, {
+  "address": "37ZPqNdmFJAMutT5hRt192gPsY8NK4pPJZ",
+  "current_balance_btc": "0.00015819"
+}, {
+  "address": "155Y3LwspnrZLfDKveefs9YxHdcQXm2L4b",
+  "current_balance_btc": "0.00015282"
+}, {
+  "address": "13Q8e2nSjzYgx1W68qrr4DUqCQQRDmxBzX",
+  "current_balance_btc": "0.00015047"
+}, {
+  "address": "14scb6A19PJ7JbDPvfKC4pvSgduKp9bExj",
+  "current_balance_btc": "0.00014764"
+}, {
+  "address": "19mVFV2wqB7koYt3cw3marHBRmvzGpEmv5",
+  "current_balance_btc": "0.00014569"
+}, {
+  "address": "1KL5NPWwhmnAydFgFa2FM4smufcJ4tNgf4",
+  "current_balance_btc": "0.00014098"
+}, {
+  "address": "1KwQe8YRE2nrwCWtPLafoTwCfRW4VD2Nwk",
+  "current_balance_btc": "0.00014036"
+}, {
+  "address": "1JoA1cKKCQ9Vy5JWo46e4Fc6qJGRF6FKoZ",
+  "current_balance_btc": "0.0001402"
+}, {
+  "address": "17gi5W7uCyJ3wddgQ4QY48ViLULaMKWfBa",
+  "current_balance_btc": "0.00013978"
+}, {
+  "address": "1bBRqV5CKamTe6Jf6t1viBNnV1UkLCH8q",
+  "current_balance_btc": "0.00013371"
+}, {
+  "address": "1AnE6RQdf8WqXvstFo5tPr2EaxfVQ7iEuG",
+  "current_balance_btc": "0.000132"
+}, {
+  "address": "18vchE87HwquL8Rs9neCQ5yrEy9ZkQbFvD",
+  "current_balance_btc": "0.00013055"
+}, {
+  "address": "1FczFFwPMs3XXKzyH9eSheSgB2yCQBtTVk",
+  "current_balance_btc": "0.00013036"
+}, {
+  "address": "12hVpZuikARb7gMvos5cGjPfMsN6A4yGxW",
+  "current_balance_btc": "0.00013018"
+}, {
+  "address": "142kCdcH9QSZqubCS7Z5vj8x32xif3ibDT",
+  "current_balance_btc": "0.00013"
+}, {
+  "address": "1DKGT4jLSy5CkgDJ7PsxHsRZKKw4LgHYsQ",
+  "current_balance_btc": "0.00012842"
+}, {
+  "address": "1LL5FF7Um4gV8LPFuizvuA6pdGNtsy15p4",
+  "current_balance_btc": "0.0001278"
+}, {
+  "address": "1Nhje4KPpDEn4DyPGrMhSwU7DCXyuNRJeN",
+  "current_balance_btc": "0.00012641"
+}, {
+  "address": "144JYojvgMcnJ14AeKPWvQgnXDztdZLbDQ",
+  "current_balance_btc": "0.00012576"
+}, {
+  "address": "181iEzwHCqsvn5esPRpNKssXWzhUpKwmVG",
+  "current_balance_btc": "0.00012536"
+}, {
+  "address": "15aVE1Pk5QbTagvj77ASLpvNrCNa2SpiPo",
+  "current_balance_btc": "0.00012484"
+}, {
+  "address": "13cDkWBzMByQnsGfPxGU2jmMPG8nfc6apm",
+  "current_balance_btc": "0.0001216"
+}, {
+  "address": "13R8B8Ko6ZKsgcMCVMWT4KgRvDLKKyEM1P",
+  "current_balance_btc": "0.00011795"
+}, {
+  "address": "1FEZ14eBcXLLb3o267dfn7Gh7AgoUnFiK1",
+  "current_balance_btc": "0.00011794"
+}, {
+  "address": "1PAMuSuEmLsMdscWxJwX321wgZe2FmzRuh",
+  "current_balance_btc": "0.00011673"
+}, {
+  "address": "1JAAg1CtxVGH2xv8iCG6SwMwiAJEqMp5EJ",
+  "current_balance_btc": "0.00011514"
+}, {
+  "address": "1PdmitemHECaS8wcSQ6UAP6kmfrY8cXoWC",
+  "current_balance_btc": "0.00011482"
+}, {
+  "address": "1Mimx2gkXXDfCtktdRZY4ZonFJmdDNMZZo",
+  "current_balance_btc": "0.000114"
+}, {
+  "address": "1MBM79cM4umqmLtXzQL4Bf7RpaoncL8hDN",
+  "current_balance_btc": "0.0001133"
+}, {
+  "address": "13czYyDEm1suJTRTCFiq6KbsZQyxgtn1FT",
+  "current_balance_btc": "0.00011198"
+}, {
+  "address": "18TWN9W7NHMjDApMcXaJAX8SKvA3JT2fGb",
+  "current_balance_btc": "0.0001115"
+}, {
+  "address": "15S6i1WePfb9cDeZNGLa3GFBYdR8B6ya1N",
+  "current_balance_btc": "0.00011085"
+}, {
+  "address": "1ANptsgrReLcGP1bCGYryiBaQtA5kUZxrS",
+  "current_balance_btc": "0.00010863"
+}, {
+  "address": "15kCKr497VToaeVWFD7fxQvpxTiMT9Zyyw",
+  "current_balance_btc": "0.00010858"
+}, {
+  "address": "13ffH7tYYLPNaua2LE7iw8xSAz11H99mgz",
+  "current_balance_btc": "0.00010705"
+}, {
+  "address": "14nMAg6uNHYi8XrdeLNVFMnihP3qgFsicD",
+  "current_balance_btc": "0.00010301"
+}, {
+  "address": "1BdDpXEN7bXj61ULmdBffzEkQzRsDHob3W",
+  "current_balance_btc": "0.0001"
+}, {
+  "address": "1KqtnT7VPMnKDUbRaRUQ1pq5AtFuX38ViQ",
+  "current_balance_btc": "0.0001"
+}, {
+  "address": "1dice48cexAaxtGiTRJTNUT1mBqqunzM1",
+  "current_balance_btc": "0.0001"
+}, {
+  "address": "17shWCESF8f8ms2w144RVZYjw2H9FaMkoZ",
+  "current_balance_btc": "0.0001"
+}, {
+  "address": "1EygEWx5NbNwkKVFepbYafJJpybz8u8785",
+  "current_balance_btc": "0.0001"
+}, {
+  "address": "16731aSWx9wiKG9nAA19Yesa3Rrt68hFWh",
+  "current_balance_btc": "0.00009997"
+}, {
+  "address": "1BQBvKtwnQ6kwkiyHcheLwhgPqhFm2EVz8",
+  "current_balance_btc": "0.00009951"
+}, {
+  "address": "1LyFQuzUasbBLMAmgEmfyi5VJjry1EuPf4",
+  "current_balance_btc": "0.00009854"
+}, {
+  "address": "1GAygCmZmDwUbXKPdYq18y8U7vTqDuFovV",
+  "current_balance_btc": "0.00009729"
+}, {
+  "address": "1McodaKabeCp7AUAzHrvddWHRpkKNyk7St",
+  "current_balance_btc": "0.00009654"
+}, {
+  "address": "1FFJohsVXzy8DKMSvuE3wN4AZUXZKGeeBC",
+  "current_balance_btc": "0.00009647"
+}, {
+  "address": "15xNvorV1EZF9ryqtcWKCNthjCvZ91ZM7N",
+  "current_balance_btc": "0.00009632"
+}, {
+  "address": "14F6Zohyfeo6U7A4kCxmD5tLcdjuGLYzAN",
+  "current_balance_btc": "0.00009597"
+}, {
+  "address": "18iAJNuYEnDWjCjRmkqqUgiTysSTvnZ41i",
+  "current_balance_btc": "0.00009587"
+}, {
+  "address": "1CGFMaf5e4B6RXmnfbDnaviUhzYiMyCE2X",
+  "current_balance_btc": "0.00009363"
+}, {
+  "address": "1EdoYXPJy9BQzTALZqwxTkp5sj3tczLa9a",
+  "current_balance_btc": "0.00009331"
+}, {
+  "address": "1BTXWrDvCCBMtAcbXihEKF9S4Z6GeN84Kp",
+  "current_balance_btc": "0.00009214"
+}, {
+  "address": "1DJ1tYDztWNvzPyykv1tkQFxZLBnQ8Q8Rh",
+  "current_balance_btc": "0.00009123"
+}, {
+  "address": "1scfuRNrwhqu5zH21h9xGdB9M8nPa1urt",
+  "current_balance_btc": "0.00009114"
+}, {
+  "address": "15cnqZZpiA6tbcAAAVU5k9QuzuTSyASuZr",
+  "current_balance_btc": "0.0000905"
+}, {
+  "address": "1P6g2AtVuob4GsVgh2mv3SaMnK4o3foTwK",
+  "current_balance_btc": "0.00009048"
+}, {
+  "address": "16KXzo2gdpk6jgAmnfbqq2y28yZWAhbVRU",
+  "current_balance_btc": "0.00009031"
+}, {
+  "address": "13PFspHrinemDHnryL3tqGz1UiWjGexqNF",
+  "current_balance_btc": "0.00009022"
+}, {
+  "address": "19m8amueSL9ahobnSACzZzneftSNzqwVb7",
+  "current_balance_btc": "0.00008802"
+}, {
+  "address": "1NysmZC2Pw6LbxoAb28C7jqzW5MJrt7B3Z",
+  "current_balance_btc": "0.00008724"
+}, {
+  "address": "13mTLmzJM5FnntKm6meh3nRfwked4NzdqH",
+  "current_balance_btc": "0.00008585"
+}, {
+  "address": "1HnzQuDAxmvfc2bcstWDJgmSWpcWkc24kA",
+  "current_balance_btc": "0.00008499"
+}, {
+  "address": "1DDLVqMBFDiFME4hZy4k31jmKuZ4ZqVQj5",
+  "current_balance_btc": "0.00008358"
+}, {
+  "address": "1Ba8TZxrrBoA1ypGWAGX2kxXLpTHUqqr8n",
+  "current_balance_btc": "0.00008357"
+}, {
+  "address": "1MF35jjJgUaLTi27RWjiArjZcDxr23Q9WJ",
+  "current_balance_btc": "0.00008352"
+}, {
+  "address": "1LvzC5QTvxSrjQYxrRL9uo7B4ndTNC6jjT",
+  "current_balance_btc": "0.00008324"
+}, {
+  "address": "1JkBGECBxzqrx5gsuA6cJBtZaqGacPgjX4",
+  "current_balance_btc": "0.00008286"
+}, {
+  "address": "1PX6o8i7PvRJxVs3Pnhdudysrw5xqw46ig",
+  "current_balance_btc": "0.00008234"
+}, {
+  "address": "1N8jUwikPn5GDVkyQrvLAPFgekZMGjt9kt",
+  "current_balance_btc": "0.00008012"
+}, {
+  "address": "17MLCFyqozDEHEcKgjUp5VwxBhgYPBvo7X",
+  "current_balance_btc": "0.00007926"
+}, {
+  "address": "1HZ4ETWghY2NegxjES42Rn85kYtmgcXuaZ",
+  "current_balance_btc": "0.000078"
+}, {
+  "address": "1HMdNhxM82GTr9hdaBPBkDNGGetAouKYUw",
+  "current_balance_btc": "0.00007796"
+}, {
+  "address": "12BE5m3p2WpVodBM1Rzf1nER4eW1SAZ6zj",
+  "current_balance_btc": "0.00007666"
+}, {
+  "address": "1P7wC43QJD6iXiRBvKw4KE6tgtbvNTujJw",
+  "current_balance_btc": "0.00007631"
+}, {
+  "address": "1JngEGAK4uN6Zk8YgZuAzL81GwdJ8zqUPF",
+  "current_balance_btc": "0.00007607"
+}, {
+  "address": "1ArtDpYoxm944rSfyaAvdoi74p2dJ3MPEo",
+  "current_balance_btc": "0.0000757"
+}, {
+  "address": "1MdXuDbRiZ8UngPXgvvt5dvxDQfbCrbdCa",
+  "current_balance_btc": "0.0000755"
+}, {
+  "address": "1CkrJaFfb7m5kjk9HzkgL5CkqKtX2y41K9",
+  "current_balance_btc": "0.00007511"
+}, {
+  "address": "16XsxJUiiCyHwtWnG9PfhQ7xS3iegU8y2g",
+  "current_balance_btc": "0.00007459"
+}, {
+  "address": "19QuoyzW9Am1FgDzvZwMCmdn9PgGnxFyeW",
+  "current_balance_btc": "0.00007425"
+}, {
+  "address": "158V9DqMVHhX2xjiuiwXU4tzbrEL6FgYdL",
+  "current_balance_btc": "0.00007401"
+}, {
+  "address": "1G151X5oKWaNwV21QqmRo1KexfuZPcbxZg",
+  "current_balance_btc": "0.00007316"
+}, {
+  "address": "1MAxqXpgfJcwevm3fLg5oihLfAzpM2Wzqc",
+  "current_balance_btc": "0.00007274"
+}, {
+  "address": "1BoCw4yVLFM6P59kSLiCwrAynRysGj1kua",
+  "current_balance_btc": "0.0000724"
+}, {
+  "address": "1NRm2TniqiJZgRray82ArKmoXjQreyMmPA",
+  "current_balance_btc": "0.00007"
+}, {
+  "address": "1CwwcFFPNPvP9P3kQ6tzrH2mxSdoeZC4jT",
+  "current_balance_btc": "0.00006951"
+}, {
+  "address": "16bujLb4r2AgXPTxwXZVkYcHwGEeRChXSb",
+  "current_balance_btc": "0.0000691"
+}, {
+  "address": "17dhEiYkg8WmP2z6JdR29WNF2kMUcaojn9",
+  "current_balance_btc": "0.00006887"
+}, {
+  "address": "128UtiobFbNQ1nzTr3nc1hM6uqBsFRzt1p",
+  "current_balance_btc": "0.00006791"
+}, {
+  "address": "1MRhzpD5MyLLSkRZNWJ3GDLsQ27fRfEkGj",
+  "current_balance_btc": "0.00006745"
+}, {
+  "address": "1ARU3A3xEY158hWsDmUXpMFcsAkBeAw8dm",
+  "current_balance_btc": "0.00006742"
+}, {
+  "address": "13py2pX47izLiLq4hUUbbLQvAojuSwas9M",
+  "current_balance_btc": "0.00006616"
+}, {
+  "address": "164N7CmjBRajrW7nfnuFmXE7y2MKT9V5nx",
+  "current_balance_btc": "0.000066"
+}, {
+  "address": "12nEu6LbNfzfGXL35FFs3djErKgVX8zD1j",
+  "current_balance_btc": "0.000066"
+}, {
+  "address": "1J12ePEqdKk7nvaK244NLVCuB48vsGQLsk",
+  "current_balance_btc": "0.00006497"
+}, {
+  "address": "14QGhdpyv6ZHhzV7hqHqybxQhh2eVMZGNS",
+  "current_balance_btc": "0.00006462"
+}, {
+  "address": "122G4k2SBDh63NY487Wcm4P2WFvE3t73WY",
+  "current_balance_btc": "0.00006348"
+}, {
+  "address": "1DCwUK3eoDVzAAucXGnXMXCyr9vphmJf2Q",
+  "current_balance_btc": "0.00006162"
+}, {
+  "address": "13S5wA3CB6LgTE8scEpUbK71tuzBLQ4ot9",
+  "current_balance_btc": "0.00006135"
+}, {
+  "address": "19Vr3fg3jcHeidqrh1LaTGVGLEWTDosiqE",
+  "current_balance_btc": "0.00006096"
+}, {
+  "address": "1Bfd3S2aA5EHMT4dzEjFCyLLqaMhC1JFPh",
+  "current_balance_btc": "0.0000606"
+}, {
+  "address": "1KWCA6zgXcVPdCEkSWpu7zAsKMKvAzApfw",
+  "current_balance_btc": "0.00006037"
+}, {
+  "address": "137NyKZqZdvJkpQBmM9nd6MvpSywizZgG3",
+  "current_balance_btc": "0.00006032"
+}, {
+  "address": "1DG2nnN29b9EFap8u4ST4p6fHYkfYM9xVk",
+  "current_balance_btc": "0.0000594"
+}, {
+  "address": "13AnXk1sgvTL2Q4CHd7rRCsUkYUGJeMb7T",
+  "current_balance_btc": "0.00005918"
+}, {
+  "address": "1NzbexvBaxGoU69XKHV83onCkcD6hZM3M6",
+  "current_balance_btc": "0.00005902"
+}, {
+  "address": "1PWzwU98D1RQtgZapvS3LyWGP5YudPezd6",
+  "current_balance_btc": "0.0000586"
+}, {
+  "address": "1CKJCoSgKxQcH48o9hxMyhgrnAEp2YcmEx",
+  "current_balance_btc": "0.00005796"
+}, {
+  "address": "186DzrJM3wfMrwH8sGnLkDdwFnGzDvWAEF",
+  "current_balance_btc": "0.00005754"
+}, {
+  "address": "1NjxsEdzifYCxsY1gDoHeHuJc9uw9NUMQQ",
+  "current_balance_btc": "0.0000574"
+}, {
+  "address": "1N2tQKLMdTD6vTPrzBFY83gMpAatzFDeuG",
+  "current_balance_btc": "0.00005683"
+}, {
+  "address": "1Gg92NPYPN6XE7GzznWjk1WQe8yyMSDjof",
+  "current_balance_btc": "0.0000565"
+}, {
+  "address": "16doiNfV3ppzJyhbjVgbVkSDoFvjjyLK6d",
+  "current_balance_btc": "0.00005648"
+}, {
+  "address": "161pFHJJzjBtvc2dKCw4SyJgFRvZGXYj22",
+  "current_balance_btc": "0.00005561"
+}, {
+  "address": "1JxGqKdTnTphDo5m6sMaoQg5PWP23DvVpa",
+  "current_balance_btc": "0.0000533"
+}, {
+  "address": "1K71Np3HZEZDYwD76ETrPhnpVWGnKGoCQR",
+  "current_balance_btc": "0.00005253"
+}, {
+  "address": "17AtKkE7d5SmKpfQd2o3GLEXnB1zVuPmpn",
+  "current_balance_btc": "0.00004803"
+}, {
+  "address": "13nio9uhUXNJfXzJD2K81L9RcbKZKiBktf",
+  "current_balance_btc": "0.00004667"
+}, {
+  "address": "16E1GBqNqLM5fGyxMs2g5CFtrKjEaqtifj",
+  "current_balance_btc": "0.00004575"
+}, {
+  "address": "1FBFgSWm6XyJeoSsA9mfsaetKNiV6VpieT",
+  "current_balance_btc": "0.00004535"
+}, {
+  "address": "1HJALYo9mnTe9C8sWDrBUZtBgrwwDrK9zf",
+  "current_balance_btc": "0.00004373"
+}, {
+  "address": "1ANgHgAKUEh6uDtv7KrkieegRcTMRcpGyn",
+  "current_balance_btc": "0.00004332"
+}, {
+  "address": "15B9k6SLfPzUCMAJZpq5iGC8maokm1tVUh",
+  "current_balance_btc": "0.00004309"
+}, {
+  "address": "113p2384rR7T1cx2K2ARZoAjfmGuaQaWTW",
+  "current_balance_btc": "0.00004241"
+}, {
+  "address": "1BMiZc6FU6dUq3djBQApjyYrvMcF474Rtg",
+  "current_balance_btc": "0.00004217"
+}, {
+  "address": "3Jpj38nTzSmXXJYC1h5bNwX756eDTHCCSx",
+  "current_balance_btc": "0.00004152"
+}, {
+  "address": "1KDr4xuM3UrmbHZozNkQbYG3Pi7D2MJw1M",
+  "current_balance_btc": "0.00004145"
+}, {
+  "address": "1DHxFWguc3ruBasCgXvf8mU6y65MuGrJ5",
+  "current_balance_btc": "0.00004091"
+}, {
+  "address": "19yDDwwUhSRHofwVCyM5S7edw5E3oU3hBf",
+  "current_balance_btc": "0.0000401"
+}, {
+  "address": "1CxgBtqJR3nVTQbJF3uEQUUwaGSWpd9iVi",
+  "current_balance_btc": "0.00003951"
+}, {
+  "address": "16QsEbW9oX8QytxpUz6Qxui4s4unHiMfXw",
+  "current_balance_btc": "0.00003919"
+}, {
+  "address": "1BA4piEDNMGPHqwoGBFNYh5jDHvwL3bUbs",
+  "current_balance_btc": "0.00003919"
+}, {
+  "address": "1HcLfCMf7FryyZpwXfPsuMGCn3y2m2qQPu",
+  "current_balance_btc": "0.00003847"
+}, {
+  "address": "19KTzdwDsBmARYu6BxwvbypKcD7vFQqjjd",
+  "current_balance_btc": "0.00003696"
+}, {
+  "address": "1NHy64geE6oPYF8prqqcC7vYJWm8ifWtg",
+  "current_balance_btc": "0.0000363"
+}, {
+  "address": "14wUFuX27UjE1pH2UajTGbpx6W6j4ZThA3",
+  "current_balance_btc": "0.00003498"
+}, {
+  "address": "1ABBgb4259A1KDDw6fNucT9Nj3x3vDm4WQ",
+  "current_balance_btc": "0.00003461"
+}, {
+  "address": "1ES46PiKf7dXmspjgtQ3WLMGYZXX7ZaUyZ",
+  "current_balance_btc": "0.00003043"
+}, {
+  "address": "1NMQPqbe29gp5GbBGsrktYnP4CxJjfwk6j",
+  "current_balance_btc": "0.00003043"
+}, {
+  "address": "144uUQSFH3t2u2grP9ekQuzndGpQRmT4V3",
+  "current_balance_btc": "0.00002942"
+}, {
+  "address": "16X8g1sxrEWTxN9ABazRCeZ62tw3d6Xf1h",
+  "current_balance_btc": "0.00002881"
+}, {
+  "address": "14wXrm49HxggbdQ6RGfWY8qghGEWhLA28K",
+  "current_balance_btc": "0.00002765"
+}, {
+  "address": "17iMKEBf3h5ppFZRGcXys9mu3woAhcWLPC",
+  "current_balance_btc": "0.00002635"
+}, {
+  "address": "1FS6WEmaiWVF4fsBmKSkVZqfpy7PFhGabe",
+  "current_balance_btc": "0.00002456"
+}, {
+  "address": "13f54uwVL43yyJCcpAnwG4AMZqiW5c6k4F",
+  "current_balance_btc": "0.00002398"
+}, {
+  "address": "12KQyUECYPY3ddUznpB1mSJE1hUWBPNXxP",
+  "current_balance_btc": "0.00002313"
+}, {
+  "address": "1JBStXeWYwfqkn7vFDWhByNozfKjUUkzgC",
+  "current_balance_btc": "0.00002262"
+}, {
+  "address": "1EfZAKpCw7NhoKzWnSk2M8xVhDEoXXXb4o",
+  "current_balance_btc": "0.00002253"
+}, {
+  "address": "1EXsmmqi7jSUUTLZShjtyxV7Co6HNfbzaV",
+  "current_balance_btc": "0.0000221"
+}, {
+  "address": "1Ju4nDAzFgbjPdmoL8kbcVMRWE8T7dzumJ",
+  "current_balance_btc": "0.00002207"
+}, {
+  "address": "17oZuxKgcHFFGtcxox4WMUZF1i7Qhd3Cnm",
+  "current_balance_btc": "0.00002072"
+}, {
+  "address": "1Be1bBxEEepm8s2cn9bguKvgP7pUmrcHf9",
+  "current_balance_btc": "0.00002065"
+}, {
+  "address": "1H9bx54PVrgbhH1psVQvN1oCr43eTs7f94",
+  "current_balance_btc": "0.00002"
+}, {
+  "address": "12pZ31FskYhMyCZ48kcMFh7KvyhEkty87W",
+  "current_balance_btc": "0.00001966"
+}, {
+  "address": "19Ch4rgdn7k4yoqKo1poa7jZUt2DAAM6yh",
+  "current_balance_btc": "0.00001938"
+}, {
+  "address": "1Pc9i9sSs31oY71BHJ2nHhzMYozJirWZL3",
+  "current_balance_btc": "0.00001844"
+}, {
+  "address": "17LqhDP6ESskzPuZ8DcRtrktWNh1NkC6bx",
+  "current_balance_btc": "0.0000184"
+}, {
+  "address": "19EEKp7jG6Q4kjQ2kqx1gWJEDjx6kwSQf1",
+  "current_balance_btc": "0.0000174"
+}, {
+  "address": "1FrnxGj6VQTAv41bQA79AwT2jopyuEUJz4",
+  "current_balance_btc": "0.0000171"
+}, {
+  "address": "1Fpd6KAEPtYs5CWXRqctctu91jRci4kkui",
+  "current_balance_btc": "0.00001582"
+}, {
+  "address": "1NJqhBd5pzu1uoMfjLxfQMxgYs4coHEApt",
+  "current_balance_btc": "0.00001562"
+}, {
+  "address": "169zpAcWt9vQoTfouaSsBVqgmCeWuL3dWa",
+  "current_balance_btc": "0.00001415"
+}, {
+  "address": "18iGdLrBucZhSgcnUuWdEHnjZ315QUBSXt",
+  "current_balance_btc": "0.0000141"
+}, {
+  "address": "1AL7ncaqEacdigH6Zbsj2mvXwP3u1QMtA5",
+  "current_balance_btc": "0.0000137"
+}, {
+  "address": "1QBGgxpxP4J7Qm5KhC3yHepSdfmenH5h7K",
+  "current_balance_btc": "0.00001355"
+}, {
+  "address": "12Db6GK1e3eDgyi8YxZzYDWz6P5CM2vBqH",
+  "current_balance_btc": "0.00001351"
+}, {
+  "address": "149uoPp7Vf2Rr4gABDMQytn6dSHT869kT4",
+  "current_balance_btc": "0.00001234"
+}, {
+  "address": "1NLHocHxojqRZbMcubGfatWXAeRNsMVfTU",
+  "current_balance_btc": "0.00001173"
+}, {
+  "address": "1EYu9CDZptSZDXxJjpR3VbkoHGh6tfg4QZ",
+  "current_balance_btc": "0.0000113"
+}, {
+  "address": "12bdxLzkq2YZzV7yZSfeGGPmHkenQT2q5Z",
+  "current_balance_btc": "0.00001094"
+}, {
+  "address": "1Mvfw8Q6zxGmmuDAQatBreNYvRFkceDUKG",
+  "current_balance_btc": "0.00001088"
+}, {
+  "address": "3ASc2fMcUAfedAgGDsCJsVTxPwULji57bf",
+  "current_balance_btc": "0.00001068"
+}, {
+  "address": "1KeXEqj7GHFSxyZgDdE9HhnGRdmCkUPM82",
+  "current_balance_btc": "0.00001"
+}, {
+  "address": "13rYGYYY82KLByaKGvUrGuqXWU5QDsc5zh",
+  "current_balance_btc": "0.00001"
+}, {
+  "address": "1Br836Ve2FvDMzgNFrBPNSpLKsbWcZr9CL",
+  "current_balance_btc": "0.000009"
+}, {
+  "address": "1CBFLHZRrfUcZm3gmm4CTHSqFGntLB8ehi",
+  "current_balance_btc": "0.00000844"
+}, {
+  "address": "18Dnz93KxG2XGjKoTp4qPo3BhWeUn98VDB",
+  "current_balance_btc": "0.0000082"
+}, {
+  "address": "1CwaytRYhQfHyYKZG7kLew7k1UN2vXsJr1",
+  "current_balance_btc": "0.00000781"
+}, {
+  "address": "174vZeDdcsCWVFqjsGSfERuzs9MKQY7FZn",
+  "current_balance_btc": "0.00000781"
+}, {
+  "address": "1C2KGZmiN2ZmT1rPmHYtr6qZjJvv1vBsE3",
+  "current_balance_btc": "0.00000771"
+}, {
+  "address": "13ZSh6KXSNq5svgGFp2jvPnadahSSmDu1g",
+  "current_balance_btc": "0.00000722"
+}, {
+  "address": "1H1nGjTKJcsTXFsfqcGiuV6b6Aw9azWi4g",
+  "current_balance_btc": "0.00000716"
+}, {
+  "address": "16PhbsjpP35PhyCnGJ5JKbgtWQprGZd9Vs",
+  "current_balance_btc": "0.00000707"
+}, {
+  "address": "14dkLWmiaB7UXQ2fA8UMWcAw2VZUHam6YX",
+  "current_balance_btc": "0.000007"
+}, {
+  "address": "15fUcLXjCpwbwmQ6NMQ1g9n9NHwHexQnvp",
+  "current_balance_btc": "0.00000685"
+}, {
+  "address": "1C325Tu34EZ4b3fJLKTKa78GyKqyVb1XZt",
+  "current_balance_btc": "0.00000685"
+}, {
+  "address": "1ArywhtRu6TpedB4xZ3vxv6FD8VsLgPK31",
+  "current_balance_btc": "0.00000685"
+}, {
+  "address": "14UCZtc6iVjrUgtrdksw7fGN39fHtLpain",
+  "current_balance_btc": "0.00000678"
+}, {
+  "address": "135kZfWUYkm4i1f9a8vocHD38D9exJyttM",
+  "current_balance_btc": "0.00000635"
+}, {
+  "address": "1CBPN5YxjuAbr4XKAJyfqdto2rz65ACM2J",
+  "current_balance_btc": "0.00000614"
+}, {
+  "address": "18Hftg7gAFd7HjNhKHiw8nik8G8ffF9oMW",
+  "current_balance_btc": "0.00000604"
+}, {
+  "address": "1H4FPxhVEBxZd9zQKPRFVoccxKWMvrumQT",
+  "current_balance_btc": "0.000006"
+}, {
+  "address": "1JP8FqoXtCMrR1sZc2McLWmHxENox1Y1PV",
+  "current_balance_btc": "0.000006"
+}, {
+  "address": "1HJiBMpjnQrCEswhauRdrhqaTeiyhwa1e7",
+  "current_balance_btc": "0.000006"
+}, {
+  "address": "1AwRnNBu3w9bcD7KrVi5Sidb1uZzASNwN6",
+  "current_balance_btc": "0.00000572"
+}, {
+  "address": "1PxynGMuQ7e4QqSKLBn9mYqTJ5qgyXKWVK",
+  "current_balance_btc": "0.00000547"
+}, {
+  "address": "1GB3yN6E9EgdkoVJBWiVo3qcLGVxs6uNe1",
+  "current_balance_btc": "0.00000547"
+}, {
+  "address": "1KgMFWLVUdrVuhYxpd4jDroGD3JKzur636",
+  "current_balance_btc": "0.00000546"
+}, {
+  "address": "1CZ49YD8gsee97GBvkGSmswXQeX8KQowGq",
+  "current_balance_btc": "0.00000546"
+}, {
+  "address": "1FjVqpYgsZjG2XyCtY5DMVhrUgZAv9BCip",
+  "current_balance_btc": "0.00000484"
+}, {
+  "address": "1DUJpgYXg1b3fiBY5eL1WcNUBouH9Myczu",
+  "current_balance_btc": "0.0000006"
+}, {
+  "address": "1Evx159Ap6rdhvU7APhiCW4FJFNWjEVQHN",
+  "current_balance_btc": "0.00000032"
+}, {
+  "address": "1MvedfYGrBu2qSyRByCzXCuAcBDryynjJ2",
+  "current_balance_btc": "0.00000006"
+}, {
+  "address": "1HeatPdtuXahafiAaEVERoDA8w3ceL7Qr1",
+  "current_balance_btc": "0.00000005"
+}, {
+  "address": "1HaPyREZj9gx3BnfvhEgx73uZ8gfKQux9S",
+  "current_balance_btc": "0.00000004"
+}, {
+  "address": "1JLkiDjVonBCjcp4FVD6rgUBr2ez43GQsp",
+  "current_balance_btc": "0.00000003"
+}, {
+  "address": "16ZVMU9MZETGvoaC8v4ijk6iLZ8T3Pv9zS",
+  "current_balance_btc": "0.00000003"
+}, {
+  "address": "1HZF12thWcyv9WjGk7W1pkSYmfhmRXv4DP",
+  "current_balance_btc": "0.00000002"
+}, {
+  "address": "1Fu6eYz3ivNEZ1yZwwxQiti4QyxFSJw9Zx",
+  "current_balance_btc": "0.00000002"
+}, {
+  "address": "1BcZXZgPw1oUd6w4s8AvDELBEFXvTr5uMS",
+  "current_balance_btc": "0.00000002"
+}, {
+  "address": "1CYQqeeD3j23x69P5hWtH73aZ65dtdLU31",
+  "current_balance_btc": "0.00000002"
+}, {
+  "address": "1BzKthf1cimNXKCkjR9a6n4W9V47sqYreQ",
+  "current_balance_btc": "0.00000002"
+}, {
+  "address": "15yakKCcPBNYT2ASzsZXtX8XmoHvH3aBL8",
+  "current_balance_btc": "0.00000002"
+}, {
+  "address": "1btcxse3wD4DU9Xq4mVhRj1tLY7MnyTiX",
+  "current_balance_btc": "0.00000002"
+}, {
+  "address": "13TJWJx5g1zTjQU4G7LmuEGqaEXajXWXjP",
+  "current_balance_btc": "0.00000001"
+}, {
+  "address": "1Jr8rCJAStL2scHAEyeZaEptPdftUXGAp7",
+  "current_balance_btc": "0.00000001"
+}]
