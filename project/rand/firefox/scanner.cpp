@@ -8,7 +8,7 @@
 #include <sstream>
 #include <chrono>
 #include <algorithm>
-#include <utility>   // std::swap
+#include <utility>
 #include <omp.h>
 
 #include <secp256k1.h>
@@ -68,7 +68,6 @@ static inline U256 u256_add(const U256& a, const U256& b) {
     return r;
 }
 
-// a mod m via bitwise long division (slow path only)
 static U256 u256_mod(const U256& a, const U256& m) {
     if (u256_cmp(a, m) < 0) return a;
     U256 rem = {0,0,0,0};
@@ -84,6 +83,38 @@ static U256 u256_mod(const U256& a, const U256& m) {
         if (u256_cmp(rem, m) >= 0) rem = u256_sub(rem, m);
     }
     return rem;
+}
+
+// ---------- 10 Integer <-> U256 ----------
+static U256 dec_to_u256(const std::string& dec) {
+    U256 r = {0,0,0,0};
+    for (char c : dec) {
+        if (c < '0' || c > '9') continue;
+        uint64_t carry = (uint64_t)(c - '0');
+        for (int i = 0; i < 4; i++) {
+            unsigned __int128 prod = (unsigned __int128)r.w[i] * 10 + carry;
+            r.w[i] = (uint64_t)prod;
+            carry = (uint64_t)(prod >> 64);
+        }
+    }
+    return r;
+}
+
+static std::string u256_to_dec(const U256& v) {
+    if (v.w[0] == 0 && v.w[1] == 0 && v.w[2] == 0 && v.w[3] == 0) return "0";
+    U256 tmp = v;
+    std::string dec;
+    while (tmp.w[0] || tmp.w[1] || tmp.w[2] || tmp.w[3]) {
+        uint64_t rem = 0;
+        for (int i = 3; i >= 0; i--) {
+            unsigned __int128 cur = ((unsigned __int128)rem << 64) | tmp.w[i];
+            tmp.w[i] = (uint64_t)(cur / 10);
+            rem = (uint64_t)(cur % 10);
+        }
+        dec.push_back('0' + (char)rem);
+    }
+    std::reverse(dec.begin(), dec.end());
+    return dec;
 }
 
 // ---------- Firefox PRNG ----------
@@ -122,8 +153,6 @@ static inline uint8_t rc4_next(RC4& st) {
 }
 
 // ---------- k pipeline ----------
-// t1, t2 are in milliseconds (64-bit). Internally truncated to 32 bits
-// to match bitcoinjs.js's `& 0xffffffff` behavior.
 static inline U256 k_from(uint64_t seed_value, uint64_t t1, uint64_t t2, int pending = 0) {
     uint16_t draws[128];
     firefox_random16(seed_value, pending, 128, draws);
@@ -133,8 +162,6 @@ static inline U256 k_from(uint64_t seed_value, uint64_t t1, uint64_t t2, int pen
         pool[2*i]   = (draws[i] >> 8) & 255;
         pool[2*i+1] = draws[i] & 255;
     }
-
-    // Truncate t1, t2 to 32 bits (matches Python's & 0xffffffff)
     uint32_t x1 = (uint32_t)(t1 & 0xFFFFFFFF);
     uint32_t x2 = (uint32_t)(t2 & 0xFFFFFFFF);
     uint32_t vals[2] = { x1, x2 };
@@ -149,7 +176,7 @@ static inline U256 k_from(uint64_t seed_value, uint64_t t1, uint64_t t2, int pen
 
     RC4 st;
     rc4_init(st, pool, 256);
-    rc4_next(st); // discard first byte (xb[0] = 0)
+    rc4_next(st);
     uint8_t v[32];
     for (int i = 0; i < 32; i++) v[i] = rc4_next(st);
 
@@ -185,26 +212,8 @@ static inline bool mul_x(const U256& k, uint8_t out_x[32]) {
 struct Entry {
     std::string label;
     uint64_t time_ms;
-    std::vector<std::string> targets; // 64-char hex (big-endian)
+    std::vector<U256> targets; // 10Integer -> U256
 };
-
-static void dec_to_be32(const std::string& dec, uint8_t out[32]) {
-    memset(out, 0, 32);
-    std::string cur = dec;
-    int pos = 31;
-    while (pos >= 0 && cur != "0" && !cur.empty()) {
-        int rem = 0;
-        std::string q;
-        for (char c : cur) {
-            int d = rem * 10 + (c - '0');
-            q.push_back('0' + d / 256);
-            rem = d % 256;
-        }
-        out[pos--] = (uint8_t)rem;
-        size_t nz = q.find_first_not_of('0');
-        cur = (nz == std::string::npos) ? "0" : q.substr(nz);
-    }
-}
 
 static std::vector<Entry> load_entries(const std::string& path) {
     std::ifstream f(path);
@@ -253,27 +262,13 @@ static std::vector<Entry> load_entries(const std::string& path) {
             size_t b2 = tok.find_last_not_of(" \t\n\r");
             if (a2 != std::string::npos) {
                 std::string num = tok.substr(a2, b2 - a2 + 1);
-                uint8_t be[32];
-                dec_to_be32(num, be);
-                char hex[65];
-                for (int i = 0; i < 32; i++) snprintf(hex + i*2, 3, "%02x", be[i]);
-                hex[64] = 0;
-                e.targets.push_back(std::string(hex, 64));
+                e.targets.push_back(dec_to_u256(num));
             }
             p = comma + 1;
         }
         entries.push_back(e);
     }
     return entries;
-}
-
-static inline bool hex_eq(const uint8_t* a, const std::string& hex) {
-    for (int i = 0; i < 32; i++) {
-        char buf[3];
-        snprintf(buf, 3, "%02x", a[i]);
-        if (buf[0] != hex[2*i] || buf[1] != hex[2*i+1]) return false;
-    }
-    return true;
 }
 
 // ---------- main ----------
@@ -309,7 +304,7 @@ int main(int argc, char** argv) {
         auto t0 = std::chrono::steady_clock::now();
         volatile int found = 0;
         U256 found_k = {0,0,0,0};
-        uint8_t found_r[32] = {0};
+        U256 found_r = {0,0,0,0};
 
         #pragma omp parallel for schedule(dynamic, 1)
         for (long long st = (long long)lo; st < (long long)hi; st++) {
@@ -319,10 +314,8 @@ int main(int argc, char** argv) {
             for (int ss = 0; ss < seed_max && !found; ss++) {
                 uint64_t seed = base_ms + ss;
                 for (int t1o = 0; t1o < size_t1 && !found; t1o++) {
-                    // t1 is in milliseconds (start_time is ms)
                     uint64_t t1 = start_time + (uint64_t)t1o;
                     for (int t2o = 0; t2o < size_t2 && !found; t2o++) {
-                        // t2 is in milliseconds
                         uint64_t t2 = t1 + (uint64_t)t2o;
                         U256 k = k_from(seed, t1, t2, 0);
                         uint8_t x[32];
@@ -330,29 +323,25 @@ int main(int argc, char** argv) {
 
                         U256 xv = u256_from_be(x);
                         U256 rv = u256_mod(xv, N);
-                        uint8_t r[32];
-                        u256_to_be(rv, r);
 
                         if (debug) {
-                            printf("[debug] seed=%llu t1=%llu t2=%llu k=", 
+                            printf("[debug] seed=%llu t1=%llu t2=%llu k=%s r=%s\n",
                                    (unsigned long long)seed,
                                    (unsigned long long)t1,
-                                   (unsigned long long)t2);
-                            for (int i = 3; i >= 0; i--) printf("%016llx", (unsigned long long)k.w[i]);
-                            printf(" r=");
-                            for (int i = 0; i < 32; i++) printf("%02x", r[i]);
-                            printf("\n");
+                                   (unsigned long long)t2,
+                                   u256_to_dec(k).c_str(),
+                                   u256_to_dec(rv).c_str());
                             fflush(stdout);
                         }
 
                         for (auto& tgt : e.targets) {
-                            if (hex_eq(r, tgt)) {
+                            if (u256_cmp(rv, tgt) == 0) {
                                 #pragma omp critical
                                 {
                                     if (!found) {
                                         found = 1;
                                         found_k = k;
-                                        memcpy(found_r, r, 32);
+                                        found_r = rv;
                                     }
                                 }
                                 break;
@@ -366,11 +355,11 @@ int main(int argc, char** argv) {
         auto t1 = std::chrono::steady_clock::now();
         double sec = std::chrono::duration<double>(t1 - t0).count();
         if (found) {
-            printf("[main] SUCCESS label=%s k=", e.label.c_str());
-            for (int i = 3; i >= 0; i--) printf("%016llx", (unsigned long long)found_k.w[i]);
-            printf(" r=");
-            for (int i = 0; i < 32; i++) printf("%02x", found_r[i]);
-            printf(" in %.1fs\n", sec);
+            printf("[main] SUCCESS label=%s k=%s r=%s in %.1fs\n",
+                   e.label.c_str(),
+                   u256_to_dec(found_k).c_str(),
+                   u256_to_dec(found_r).c_str(),
+                   sec);
         } else {
             printf("[main] NOT FOUND label=%s in %.1fs\n", e.label.c_str(), sec);
         }
