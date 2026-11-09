@@ -10,7 +10,6 @@
 #include <algorithm>
 #include <utility>
 #include <atomic>
-#include <stdexcept>
 #include <omp.h>
 
 #include <secp256k1.h>
@@ -23,7 +22,7 @@ static const uint8_t N_BYTES[32] = {
 static const uint64_t M48 = (1ULL << 48) - 1;
 
 // ---------- 256-bit helpers ----------
-struct U256 { uint64_t w[4]; };
+struct U256 { uint64_t w[4]; }; // little-endian words
 
 static inline U256 u256_from_be(const uint8_t* b) {
     U256 r;
@@ -66,63 +65,13 @@ static inline U256 u256_add(const U256& a, const U256& b) {
     return r;
 }
 
-// ---------- 512-bit multiply + Barrett reduction ----------
-// Compute a*b (512-bit) then reduce mod m using Barrett.
-// We use the simple approach: compute 512-bit product, then reduce
-// via repeated subtraction with 256-bit chunks (schoolbook).
-static inline void u256_mul_full(const U256& a, const U256& b, uint64_t out[8]) {
-    memset(out, 0, 8 * sizeof(uint64_t));
-    for (int i = 0; i < 4; i++) {
-        uint64_t carry = 0;
-        for (int j = 0; j < 4; j++) {
-            unsigned __int128 prod = (unsigned __int128)a.w[i] * b.w[j] + out[i+j] + carry;
-            out[i+j] = (uint64_t)prod;
-            carry = (uint64_t)(prod >> 64);
-        }
-        out[i+4] += carry;
-    }
-}
-
-// Reduce a 512-bit value (in 8 words, little-endian) modulo a 256-bit m.
-// Uses simple long division by bits (512 iterations). Called rarely.
-static U256 u512_mod(const uint64_t a[8], const U256& m) {
-    U256 rem = {0,0,0,0};
-    for (int bit = 511; bit >= 0; bit--) {
-        // rem = rem << 1
-        uint64_t carry = 0;
-        for (int i = 0; i < 4; i++) {
-            uint64_t nc = rem.w[i] >> 63;
-            rem.w[i] = (rem.w[i] << 1) | carry;
-            carry = nc;
-        }
-        // set lowest bit from a
-        int word = bit / 64, off = bit % 64;
-        if ((a[word] >> off) & 1) rem.w[0] |= 1;
-        if (u256_cmp(rem, m) >= 0) rem = u256_sub(rem, m);
-    }
-    return rem;
-}
-
-// Fast path: if a < m, return a. Otherwise, do 512-bit reduction (not needed for 256-bit a).
-static inline U256 u256_mod(const U256& a, const U256& m) {
+// ---------- fast mod: a < 2^256, m > 2^255 => a < 2*m, one subtraction ----------
+static inline U256 u256_mod_fast(const U256& a, const U256& m) {
     if (u256_cmp(a, m) < 0) return a;
-    // a >= m: use bitwise long division (256 iterations)
-    U256 rem = {0,0,0,0};
-    for (int bit = 255; bit >= 0; bit--) {
-        uint64_t carry = 0;
-        for (int i = 0; i < 4; i++) {
-            uint64_t nc = rem.w[i] >> 63;
-            rem.w[i] = (rem.w[i] << 1) | carry;
-            carry = nc;
-        }
-        int word = bit / 64, off = bit % 64;
-        if ((a.w[word] >> off) & 1) rem.w[0] |= 1;
-        if (u256_cmp(rem, m) >= 0) rem = u256_sub(rem, m);
-    }
-    return rem;
+    return u256_sub(a, m);
 }
 
-// ---------- 10 Integer <-> U256 ----------
+// ---------- 10진수 <-> U256 ----------
 static U256 dec_to_u256(const std::string& dec) {
     U256 r = {0,0,0,0};
     for (char c : dec) {
@@ -214,35 +163,13 @@ static inline U256 k_from(uint64_t seed_value, uint64_t t1, uint64_t t2, int pen
     U256 val = u256_from_be(v);
     U256 N = u256_from_be(N_BYTES);
     U256 Nm1 = N; Nm1.w[0] -= 1;
-    U256 rem = u256_mod(val, Nm1);
+    U256 rem = u256_mod_fast(val, Nm1);
     U256 one = {1,0,0,0};
     return u256_add(rem, one);
 }
 
-// ---------- secp256k1 (thread-safe, with cleanup) ----------
-static thread_local secp256k1_context* tl_ctx = nullptr;
-
-static inline secp256k1_context* get_ctx() {
-    if (!tl_ctx) {
-        tl_ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN);
-        if (!tl_ctx) {
-            fprintf(stderr, "[error] secp256k1_context_create failed\n");
-            std::abort();
-        }
-    }
-    return tl_ctx;
-}
-
-// Cleanup at thread exit (called explicitly at the end of parallel region)
-static inline void cleanup_ctx() {
-    if (tl_ctx) {
-        secp256k1_context_destroy(tl_ctx);
-        tl_ctx = nullptr;
-    }
-}
-
-static inline bool mul_x(const U256& k, uint8_t out_x[32]) {
-    secp256k1_context* ctx = get_ctx();
+// ---------- secp256k1 (per-thread context, created in parallel region) ----------
+static inline bool mul_x_with_ctx(secp256k1_context* ctx, const U256& k, uint8_t out_x[32]) {
     uint8_t seckey[32];
     u256_to_be(k, seckey);
     secp256k1_pubkey pub;
@@ -275,7 +202,6 @@ static std::vector<Entry> load_entries(const std::string& path) {
     while (true) {
         size_t obj_start = s.find('{', pos);
         if (obj_start == std::string::npos) break;
-        // Find matching '}' (naive: assumes no nested objects)
         size_t obj_end = s.find('}', obj_start);
         if (obj_end == std::string::npos) break;
         std::string obj = s.substr(obj_start, obj_end - obj_start + 1);
@@ -369,62 +295,64 @@ int main(int argc, char** argv) {
         U256 found_k = {0,0,0,0};
         U256 found_r = {0,0,0,0};
 
-        #pragma omp parallel for schedule(dynamic, 1)
-        for (long long st = (long long)lo; st < (long long)hi; st++) {
-            if (found.load(std::memory_order_relaxed)) continue;
-            uint64_t start_time = (uint64_t)st;
-            uint64_t base_ms = start_time * 1000;
-            for (int ss = 0; ss < seed_max; ss++) {
-                if (found.load(std::memory_order_relaxed)) break;
-                uint64_t seed = base_ms + ss;
-                for (int t1o = 0; t1o < size_t1; t1o++) {
+        #pragma omp parallel
+        {
+            secp256k1_context* ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN);
+            if (!ctx) {
+                #pragma omp critical
+                { fprintf(stderr, "[error] secp256k1_context_create failed in thread\n"); }
+            }
+
+            #pragma omp for schedule(dynamic, 1)
+            for (long long st = (long long)lo; st < (long long)hi; st++) {
+                if (found.load(std::memory_order_relaxed)) continue;
+                if (!ctx) continue;
+                uint64_t start_time = (uint64_t)st;
+                uint64_t base_ms = start_time * 1000;
+                for (int ss = 0; ss < seed_max; ss++) {
                     if (found.load(std::memory_order_relaxed)) break;
-                    uint64_t t1 = start_time + (uint64_t)t1o;
-                    for (int t2o = 0; t2o < size_t2; t2o++) {
-                        // Move found check outside t2o loop for less overhead
-                        uint64_t t2 = t1 + (uint64_t)t2o;
-                        U256 k = k_from(seed, t1, t2, 0);
-                        uint8_t x[32];
-                        if (!mul_x(k, x)) continue;
+                    uint64_t seed = base_ms + ss;
+                    for (int t1o = 0; t1o < size_t1; t1o++) {
+                        if (found.load(std::memory_order_relaxed)) break;
+                        uint64_t t1 = start_time + (uint64_t)t1o;
+                        for (int t2o = 0; t2o < size_t2; t2o++) {
+                            uint64_t t2 = t1 + (uint64_t)t2o;
+                            U256 k = k_from(seed, t1, t2, 0);
+                            uint8_t x[32];
+                            if (!mul_x_with_ctx(ctx, k, x)) continue;
 
-                        U256 xv = u256_from_be(x);
-                        U256 rv = u256_mod(xv, N);
+                            U256 xv = u256_from_be(x);
+                            U256 rv = u256_mod_fast(xv, N);
 
-                        if (debug) {
-                            #pragma omp critical(debug_print)
-                            {
-                                printf("[debug] seed=%llu t1=%llu t2=%llu k=%s r=%s\n",
-                                       (unsigned long long)seed,
-                                       (unsigned long long)t1,
-                                       (unsigned long long)t2,
-                                       u256_to_dec(k).c_str(),
-                                       u256_to_dec(rv).c_str());
-                                fflush(stdout);
-                            }
-                        }
-
-                        for (auto& tgt : e.targets) {
-                            if (u256_cmp(rv, tgt) == 0) {
-                                bool expected = false;
-                                if (found.compare_exchange_strong(expected, true)) {
-                                    found_k = k;
-                                    found_r = rv;
+                            if (debug) {
+                                #pragma omp critical(debug_print)
+                                {
+                                    printf("[debug] seed=%llu t1=%llu t2=%llu k=%s r=%s\n",
+                                           (unsigned long long)seed,
+                                           (unsigned long long)t1,
+                                           (unsigned long long)t2,
+                                           u256_to_dec(k).c_str(),
+                                           u256_to_dec(rv).c_str());
+                                    fflush(stdout);
                                 }
-                                break;
+                            }
+
+                            for (auto& tgt : e.targets) {
+                                if (u256_cmp(rv, tgt) == 0) {
+                                    bool expected = false;
+                                    if (found.compare_exchange_strong(expected, true)) {
+                                        found_k = k;
+                                        found_r = rv;
+                                    }
+                                    break;
+                                }
                             }
                         }
                     }
-                    if (found.load(std::memory_order_relaxed)) break;
                 }
             }
-            // Cleanup thread-local context at the end of each st iteration
-            // (only when the thread is about to exit the parallel region)
-        }
 
-        // Cleanup thread-local contexts
-        #pragma omp parallel
-        {
-            cleanup_ctx();
+            if (ctx) secp256k1_context_destroy(ctx);
         }
 
         auto t1 = std::chrono::steady_clock::now();
