@@ -1,7 +1,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
-#include <utility>   // std::swap
+#include <utility>
 
 static const uint8_t N_BYTES[32] = {
     0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFE,
@@ -78,7 +78,7 @@ static inline void firefox_random16(uint64_t base_seed, int pending, int n, uint
         state = (state * 0x5DEECE66DULL + 0xB) & M48;
         uint64_t lo = state >> 21;
         uint64_t numerator = (hi << 27) + lo;
-        if (i >= pending) out[idx++] = (uint16_t)((numerator * 65536) >> 53);
+        if (i >= pending) out[idx++] = (uint16_t)(numerator >> 37);
     }
 }
 
@@ -138,15 +138,9 @@ int main() {
     uint64_t seed = 1365882564000000ULL;
     uint64_t t1   = 1365882564000ULL;
     uint64_t t2   = 1365882564000ULL;
-
     U256 k = k_from(seed, t1, t2, 0);
     uint8_t be[32];
     u256_to_be(k, be);
-
-    printf("seed=%llu t1=%llu t2=%llu\n",
-           (unsigned long long)seed,
-           (unsigned long long)t1,
-           (unsigned long long)t2);
     printf("k=");
     for (int i = 0; i < 32; i++) printf("%02x", be[i]);
     printf("\n");

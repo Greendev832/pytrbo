@@ -13,7 +13,7 @@ static inline void firefox_random16(uint64_t base_seed, int pending, int n, uint
         state = (state * 0x5DEECE66DULL + 0xB) & M48;
         uint64_t lo = state >> 21;
         uint64_t numerator = (hi << 27) + lo;
-        if (i >= pending) out[idx++] = (uint16_t)((numerator * 65536) >> 53);
+        if (i >= pending) out[idx++] = (uint16_t)(numerator >> 37);
     }
 }
 
