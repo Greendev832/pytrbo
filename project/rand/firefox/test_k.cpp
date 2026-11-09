@@ -2,6 +2,7 @@
 #include <cstdio>
 #include <cstring>
 #include <utility>
+#include <string>   // std::string
 
 static const uint8_t N_BYTES[32] = {
     0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFE,
@@ -134,6 +135,39 @@ static inline U256 k_from(uint64_t seed_value, uint64_t t1, uint64_t t2, int pen
     return u256_add(rem, one);
 }
 
+static U256 dec_to_u256(const std::string& dec) {
+    U256 r = {0,0,0,0};
+    for (char c : dec) {
+        if (c < '0' || c > '9') continue;
+        // r = r * 10 + (c - '0')
+        uint64_t carry = (uint64_t)(c - '0');
+        for (int i = 0; i < 4; i++) {
+            // r.w[i] * 10 + carry, 128-bit intermediate
+            unsigned __int128 prod = (unsigned __int128)r.w[i] * 10 + carry;
+            r.w[i] = (uint64_t)prod;
+            carry = (uint64_t)(prod >> 64);
+        }
+    }
+    return r;
+}
+
+static std::string u256_to_dec(const U256& v) {
+    if (v.w[0] == 0 && v.w[1] == 0 && v.w[2] == 0 && v.w[3] == 0) return "0";
+    U256 tmp = v;
+    std::string dec;
+    while (tmp.w[0] || tmp.w[1] || tmp.w[2] || tmp.w[3]) {
+        uint64_t rem = 0;
+        for (int i = 3; i >= 0; i--) {
+            unsigned __int128 cur = ((unsigned __int128)rem << 64) | tmp.w[i];
+            tmp.w[i] = (uint64_t)(cur / 10);
+            rem = (uint64_t)(cur % 10);
+        }
+        dec.push_back('0' + (char)rem);
+    }
+    std::reverse(dec.begin(), dec.end());
+    return dec;
+}
+
 int main() {
     uint64_t seed = 1365882564000000ULL;
     uint64_t t1   = 1365882564000ULL;
@@ -144,6 +178,13 @@ int main() {
     printf("k=");
     for (int i = 0; i < 32; i++) printf("%02x", be[i]);
     printf("\n");
+
+    const char* s = "26329801829260609769066116643113100199158085603771696721971142443971041749083";
+    U256 v = dec_to_u256(s);
+    std::string back = u256_to_dec(v);
+    printf("original: %s\n", s);
+    printf("roundtrip: %s\n", back.c_str());
+    printf("match: %s\n", (std::string(s) == back) ? "YES" : "NO");
     return 0;
 }
 
