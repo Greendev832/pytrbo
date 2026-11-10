@@ -264,7 +264,9 @@ struct WorkerResult {
 
 static WorkerResult scan_range(
     uint64_t lo, uint64_t hi,
-    int seed_max, int size_t1, int size_t2,
+    int seed_max,
+    int t1_start, int t1_end,
+    int t2_start, int t2_end,
     const std::vector<U256>& targets,
     const U256& N,
     std::atomic<bool>& found,
@@ -291,10 +293,10 @@ static WorkerResult scan_range(
             for (int ss = 0; ss < seed_max; ss++) {
                 if (found.load(std::memory_order_relaxed)) break;
                 uint64_t seed = base_ms + ss;
-                for (int t1o = 0; t1o < size_t1; t1o++) {
+                for (int t1o = t1_start; t1o < t1_end; t1o++) {
                     if (found.load(std::memory_order_relaxed)) break;
                     uint64_t t1 = start_time + (uint64_t)t1o;
-                    for (int t2o = 0; t2o < size_t2; t2o++) {
+                    for (int t2o = t2_start; t2o < t2_end; t2o++) {
                         uint64_t t2 = t1 + (uint64_t)t2o;
                         U256 k = k_from(seed, t1, t2, 0);
                         uint8_t x[32];
@@ -352,6 +354,9 @@ int main(int argc, char** argv) {
     bool test = false, debug = false;
     int num_threads = omp_get_num_procs();
 
+    int t1_start = 0, t1_end = 400;
+    int t2_start = 0, t2_end = 30;
+
     for (int i = 1; i < argc; i++) {
         std::string a = argv[i];
         if (a == "--test") test = true;
@@ -359,12 +364,35 @@ int main(int argc, char** argv) {
         else if (a == "--threads" && i + 1 < argc) num_threads = std::stoi(argv[++i]);
         else if (a == "--data" && i + 1 < argc) data_path = argv[++i];
         else if (a == "--results" && i + 1 < argc) results_path = argv[++i];
+        else if (a == "--t1-start" && i + 1 < argc) t1_start = std::stoi(argv[++i]);
+        else if (a == "--t1-end" && i + 1 < argc) t1_end = std::stoi(argv[++i]);
+        else if (a == "--t2-start" && i + 1 < argc) t2_start = std::stoi(argv[++i]);
+        else if (a == "--t2-end" && i + 1 < argc) t2_end = std::stoi(argv[++i]);
     }
     if (num_threads < 1) num_threads = 1;
     omp_set_num_threads(num_threads);
 
+    if (test) {
+        t1_start = 0; t1_end = 5;
+        t2_start = 0; t2_end = 3;
+    }
+
+    if (t1_start < 0 || t1_end < t1_start) {
+        fprintf(stderr, "[error] invalid t1 range: [%d, %d)\n", t1_start, t1_end);
+        return 1;
+    }
+    if (t2_start < 0 || t2_end < t2_start) {
+        fprintf(stderr, "[error] invalid t2 range: [%d, %d)\n", t2_start, t2_end);
+        return 1;
+    }
+
+    int size_t1 = t1_end - t1_start;
+    int size_t2 = t2_end - t2_start;
+
     printf("[main] threads=%d\n", num_threads);
     printf("[main] data=%s results=%s\n", data_path.c_str(), results_path.c_str());
+    printf("[main] t1 range=[%d, %d) size=%d\n", t1_start, t1_end, size_t1);
+    printf("[main] t2 range=[%d, %d) size=%d\n", t2_start, t2_end, size_t2);
 
     std::vector<Entry> entries;
     try {
@@ -382,8 +410,6 @@ int main(int argc, char** argv) {
     }
 
     uint64_t temp_ms = test ? 60 : 15ULL * 60 * 1000;
-    int size_t1 = test ? 5 : 400;
-    int size_t2 = test ? 3 : 30;
     int seed_max = test ? 10 : 1000;
 
     U256 N = u256_from_be(N_BYTES);
@@ -404,7 +430,7 @@ int main(int argc, char** argv) {
         auto t0 = std::chrono::steady_clock::now();
         std::atomic<bool> found(false);
 
-        WorkerResult res = scan_range(lo, hi, seed_max, size_t1, size_t2,
+        WorkerResult res = scan_range(lo, hi, seed_max, t1_start, t1_end, t2_start, t2_end,
                                       e.targets, N, found, debug);
 
         auto t1 = std::chrono::steady_clock::now();
