@@ -348,6 +348,7 @@ static WorkerResult scan_range(
 // ---------- main ----------
 int main(int argc, char** argv) {
     std::string data_path = "tar_addresses.json";
+    std::string results_path = "results.txt";
     bool test = false, debug = false;
     int num_threads = omp_get_num_procs();
 
@@ -357,11 +358,13 @@ int main(int argc, char** argv) {
         else if (a == "--debug") debug = true;
         else if (a == "--threads" && i + 1 < argc) num_threads = std::stoi(argv[++i]);
         else if (a == "--data" && i + 1 < argc) data_path = argv[++i];
+        else if (a == "--results" && i + 1 < argc) results_path = argv[++i];
     }
     if (num_threads < 1) num_threads = 1;
     omp_set_num_threads(num_threads);
 
     printf("[main] threads=%d\n", num_threads);
+    printf("[main] data=%s results=%s\n", data_path.c_str(), results_path.c_str());
 
     std::vector<Entry> entries;
     try {
@@ -371,6 +374,12 @@ int main(int argc, char** argv) {
         return 1;
     }
     printf("[main] loaded %zu labels\n", entries.size());
+
+    std::ofstream results_file(results_path, std::ios::app);
+    if (!results_file.is_open()) {
+        fprintf(stderr, "[error] cannot open results file: %s\n", results_path.c_str());
+        return 1;
+    }
 
     uint64_t temp_ms = test ? 60 : 15ULL * 60 * 1000;
     int size_t1 = test ? 5 : 400;
@@ -408,11 +417,20 @@ int main(int argc, char** argv) {
             printf("[main]   r=%s\n", u256_to_dec(res.r).c_str());
             printf("[main]   iters=%llu in %.1fs (%.0f iter/s)\n",
                    (unsigned long long)res.iters, sec, rate);
+
+            results_file << e.label << "\t" << u256_to_dec(res.k) << "\n";
+            results_file.flush();
+            printf("[main] wrote result to %s\n", results_path.c_str());
         } else {
             printf("[main] NOT FOUND label=%s iters=%llu in %.1fs (%.0f iter/s)\n",
                    e.label.c_str(), (unsigned long long)res.iters, sec, rate);
+
+            results_file << e.label << "\t0\n";
+            results_file.flush();
         }
         fflush(stdout);
     }
+
+    results_file.close();
     return 0;
 }
