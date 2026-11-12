@@ -88,10 +88,9 @@ def _firefox_random16(base_seed, pending, n):
     for idx in range(n + pending):
         numerator = (nxt(26) << 27) + nxt(27)     # 53-bit integer
         if idx >= pending:
-            out.append((numerator * 65536) >> 53)     # floor(65536 * num/2**53)
+            out.append((numerator) >> 37)     # floor(65536 * num/2**53)
     return out
 
-# The three in-window (Sept 2012 - early 2014) browser generators.
 ENGINES = {
     "firefox": _firefox_random16,  # Firefox 15-27 (SpiderMonkey)
 }
@@ -116,14 +115,10 @@ def rc4_next(st):
 
 
 # ---------- k pipeline (matches bitcoinjs.js worker path) ----------
-def k_from(seed, t1, t2, pending, engine="v8"):
+def k_from(seed, t1, t2, pending, engine="firefox"):
     draws = []
-    if engine == 'v8':
-        s0, s1 = seed
-        draws = ENGINES[engine](s0, s1, 128)   # 128 draws -> 256 pool bytes
-    else:
-        seed_value = seed
-        draws = ENGINES[engine](seed_value, pending, 128)   # 128 draws -> 256 pool bytes
+    seed_value = seed
+    draws = ENGINES[engine](seed_value, pending, 128)   # 128 draws -> 256 pool bytes
     pool = [0] * 256
     for i, t in enumerate(draws):        # t is already floor(65536*Math.random())
         pool[2 * i] = (t >> 8) & 255
@@ -159,17 +154,19 @@ def firefox_range(nTime):
 def main(label, end_t1, target_R):
     # end_t1 = 1330107858000
     # target_R = [15418708180275493399148615105543371698452277500462241568750217526447599349573] 
-    temp = 15*60*1000
-    size_t1 = 400
-    size_t2 = 30
+    temp = 20*60*1000
+    t1_start = 5
+    t1_end = 100
+    t2_start = 20
+    t2_end = 70
     found = 0
 
     if found == 0:
         ENGINE = "firefox"
         for start_time in range(end_t1 - temp, end_t1):
             for seed_temp in range(0, 1000):
-                for temp_t1 in range(0, size_t1):
-                    for temp_t2 in range(0, size_t2):
+                for temp_t1 in range(t1_start, t1_end):
+                    for temp_t2 in range(t2_start, t2_end):
                         seed = start_time * 1000 + seed_temp
                         t1 = start_time + temp_t1
                         k = k_from(seed, t1, t1 + temp_t2, 0, ENGINE)
@@ -189,7 +186,23 @@ if __name__ == "__main__":
     cmp_data_list = load_json_data()
     print(cmp_data_list)
     for cmp_data in cmp_data_list:
+        print(cmp_data["label"])
         (label, k_result) = main(cmp_data["label"], cmp_data["time"], cmp_data["target"])
-        with open("results.txt", "a", encoding="utf-8") as f:
-            f.write(f"{label} \t{k_result}\n")
-    k = k_from(1357547742949006, t1, t1 + temp_t2, 0, "firefox")
+        if k_result > 0:
+            with open("results.txt", "a", encoding="utf-8") as f:
+                f.write(f"{label} \t{k_result}\n")
+
+
+# ////////////////////TEST////////////////////////
+    # seed: microseconds, t1, t2: mileseconds
+    # seed=1357547742969009
+    # t1=1357547742973
+    # t2=1357547742975
+    # k = k_from(seed, t1, t2, 0, "firefox")
+    # cal_r = mul_x(k, Gx, Gy)
+    # print(f"seed={seed} t1={t1} t2={t2}")
+    # print(k, cal_r)
+    
+    # Result
+    # k = 77247748162685796795114933782076509477039801169580166410346076439798910650135
+    # r = 31377193596046528925429296695223430708536095592179081003538257255037454761525
